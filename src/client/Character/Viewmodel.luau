@@ -19,6 +19,10 @@ export type Animation = (alpha: number) -> CFrame
 local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
 
+-- Items are built at world size for third person; in first person the arm and item are shrunk
+-- about the glove so they frame the view instead of filling it.
+local VIEW_SCALE = 0.7
+
 local holder: Model? = nil
 local item: Model? = nil
 local holdOffset = CFrame.new(1.1, -1.2, -2.2)
@@ -95,6 +99,7 @@ function Viewmodel.hold(model: Model?, gripOffset: CFrame?, offset: CFrame?)
 			part.CastShadow = false
 		end
 	end
+	model:ScaleTo(VIEW_SCALE)
 	model.Parent = holder
 	item = model
 	setTransparency(model, if visible then 0 else 1)
@@ -199,6 +204,7 @@ function Viewmodel.start()
 			part.Anchored = true
 		end
 	end
+	arm:ScaleTo(VIEW_SCALE)
 	model.Parent = camera
 	holder = model
 	RunService:BindToRenderStep("ContractMinersViewmodel", Enum.RenderPriority.Camera.Value + 3, update)
