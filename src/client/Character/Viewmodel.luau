@@ -34,6 +34,13 @@ local animationStart = 0
 local animationDuration = 0
 local recoil = CFrame.identity
 local visible = true
+-- Spinning parts of the held item (rotary barrels): each part's place in grip space, the axis they
+-- turn about, and how fast they turn.
+type Spinning = { part: BasePart, offset: CFrame }
+local spinning: { Spinning } = {}
+local spinAxis = CFrame.identity
+local spinTarget, spinRate, spinAngle = 0, 0, 0
+local SPIN_REVOLUTIONS_PER_SECOND = 4
 
 local function buildArm(parent: Model, color: Color3)
 	Build.part(parent, {
@@ -103,6 +110,19 @@ function Viewmodel.hold(model: Model?, gripOffset: CFrame?, offset: CFrame?)
 	model.Parent = holder
 	item = model
 	setTransparency(model, if visible then 0 else 1)
+	table.clear(spinning)
+	spinTarget, spinRate, spinAngle = 0, 0, 0
+	local spinner = model:FindFirstChild("Spinner", true)
+	if spinner and spinner:IsA("BasePart") then
+		local gripFrame = grip.CFrame
+		spinAxis = gripFrame:ToObjectSpace(CFrame.new(spinner.Position))
+		local barrels = model:FindFirstChild("Barrels")
+		for _, part in model:GetDescendants() do
+			if part:IsA("BasePart") and (part:GetAttribute("Spins") or (barrels and part:IsDescendantOf(barrels))) then
+				table.insert(spinning, { part = part, offset = gripFrame:ToObjectSpace(part.CFrame) })
+			end
+		end
+	end
 end
 
 -- Plays a procedural animation once over `duration` seconds.
@@ -181,8 +201,23 @@ local function update(dt: number)
 	end
 	if item and item.PrimaryPart then
 		local gripOffset = item.PrimaryPart:GetAttribute("GripOffset") :: CFrame?
-		item:PivotTo(hand * (gripOffset or CFrame.identity))
+		local gripFrame = hand * (gripOffset or CFrame.identity)
+		item:PivotTo(gripFrame)
+		if #spinning > 0 then
+			-- Spin up and down smoothly rather than snapping.
+			spinRate += (spinTarget - spinRate) * math.min(1, dt * 4)
+			spinAngle = (spinAngle + spinRate * SPIN_REVOLUTIONS_PER_SECOND * math.pi * 2 * dt) % (math.pi * 2)
+			local turn = spinAxis * CFrame.Angles(0, 0, spinAngle) * spinAxis:Inverse()
+			for _, entry in spinning do
+				entry.part.CFrame = gripFrame * turn * entry.offset
+			end
+		end
 	end
+end
+
+-- How fast the held item's spinning parts turn, 0 (still) to 1 (full speed).
+function Viewmodel.setSpin(amount: number)
+	spinTarget = math.clamp(amount, 0, 1)
 end
 
 function Viewmodel.start()

@@ -272,6 +272,7 @@ return function(weaponId: WeaponsConfig.WeaponId): Loadout.Item
 			local wait = interval - (os.clock() - lastShot)
 			if stats.mode == "Spin" then
 				spin = math.min(1, spin + 1 / 30 / (stats.spinUp or 0.5))
+				Viewmodel.setSpin(spin)
 				if spin < 1 then
 					task.wait(1 / 30)
 					continue
@@ -310,6 +311,7 @@ return function(weaponId: WeaponsConfig.WeaponId): Loadout.Item
 		end
 		firing = false
 		spin = 0
+		Viewmodel.setSpin(0)
 		Movement.setSprintBlocked(false)
 	end
 
