@@ -1,0 +1,20 @@
+{
+	"name": "ContractMinersMission",
+	"tree": {
+		"$className": "DataModel",
+		"ReplicatedStorage": {
+			"Shared": { "$path": "src/shared" },
+			"Client": { "$path": "src/client" }
+		},
+		"ServerScriptService": {
+			"Server": { "$path": "src/server" },
+			"Place": { "$path": "src/mission/server" },
+			"Vendor": { "$path": "src/vendor" }
+		},
+		"StarterPlayer": {
+			"StarterPlayerScripts": {
+				"Place": { "$path": "src/mission/client" }
+			}
+		}
+	}
+}
