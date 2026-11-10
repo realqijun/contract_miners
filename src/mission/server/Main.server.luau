@@ -20,6 +20,7 @@ local Atmosphere = require(Server.Cave.Atmosphere)
 local Carver = require(Server.Cave.Carver)
 local Surface = require(Server.Cave.Surface)
 local Dropcan = require(Server.Models.Dropcan)
+local Gear = require(Server.Character.Gear)
 local Runtime = require(Server.Mission.Runtime)
 
 local KEYS = MissionState.KEYS
@@ -93,6 +94,13 @@ local function spawnCharacter(player: Player)
 		character:PivotTo(spawnAt)
 	end)
 	player:LoadCharacter()
+	local character = player.Character
+	if character then
+		if not player:HasAppearanceLoaded() then
+			player.CharacterAppearanceLoaded:Wait()
+		end
+		Gear.equip(character, classId)
+	end
 end
 
 MissionState.set(KEYS.Phase, "Active")
