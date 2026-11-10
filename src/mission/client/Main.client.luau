@@ -17,6 +17,7 @@ local Viewmodel = require(Client.Character.Viewmodel)
 local Effects = require(Client.Effects)
 local Loadout = require(Client.Equipment.Loadout)
 local PickaxeItem = require(Client.Equipment.PickaxeItem)
+local Hud = require(Client.UI.Hud)
 
 -- The game draws its own HUD; the default backpack and health bar would duplicate it.
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
@@ -28,6 +29,7 @@ CameraController.start()
 Movement.start()
 Headlamp.start()
 Viewmodel.start()
+Hud.start()
 
 -- Our own impacts are predicted locally; only show other players' from the server.
 Net.unreliable("Impact").OnClientEvent:Connect(function(position, normal, surface, source)
