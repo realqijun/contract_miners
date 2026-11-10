@@ -61,6 +61,10 @@ local function finish(outcome: Progression.Outcome, reason: string, escaped: { [
 	for _, player in Players:GetPlayers() do
 		local leftBehind = outcome == "Success" and not (escaped and escaped[player])
 		local credits, xp = Progression.reward(missionType, outcome, delivered, leftBehind)
+		-- The walkthrough is practice and pays nothing.
+		if Runtime.get().launch.walkthrough then
+			credits, xp = 0, 0
+		end
 		rewards[player] = { credits = credits, xp = xp, leftBehind = leftBehind }
 		player:SetAttribute("RewardCredits", credits)
 		player:SetAttribute("RewardXP", xp)

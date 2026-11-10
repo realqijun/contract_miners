@@ -137,7 +137,9 @@ local function objective()
 		if not missionType then
 			return
 		end
-		title.Text = string.upper(Missions.DISPLAY_NAME[missionType]) .. " MISSION"
+		title.Text = if MissionState.get(KEYS.Walkthrough) == true
+			then "WALKTHROUGH"
+			else string.upper(Missions.DISPLAY_NAME[missionType]) .. " MISSION"
 		carrying.TextColor3 = Theme.TEXT_DIM
 		local phase = MissionState.get(KEYS.Phase)
 		if phase == "Extraction" then
@@ -189,9 +191,13 @@ local function objective()
 			goal.Text = `Deposit Volticite  {deposited} / {target}`
 			progress.set(if target > 0 then deposited / target else 0)
 			local carried = player:GetAttribute("Volticite") or 0
-			carrying.Text = if carried > 0
-				then `Carrying {carried} Volticite`
-				else "Mine Volticite and bring it to the Dropcan"
+			if carried > 0 then
+				carrying.Text = `Carrying {carried} Volticite`
+			elseif target > 0 and deposited >= target then
+				carrying.Text = "Volticite quota met"
+			else
+				carrying.Text = "Mine Volticite and bring it to the Dropcan"
+			end
 		end
 		local pool = MissionState.get(KEYS.Ferrin) or 0
 		ferrin.Text = `Ferrin  {pool % Resources.RESUPPLY_COST} / {Resources.RESUPPLY_COST}`
@@ -204,6 +210,7 @@ local function objective()
 	for _, key in
 		{
 			KEYS.MissionType,
+			KEYS.Walkthrough,
 			KEYS.Deposited,
 			KEYS.Target,
 			KEYS.Ferrin,

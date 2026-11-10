@@ -73,6 +73,21 @@ function Spawner.swarm(size: number)
 	MissionState.set(MissionState.KEYS.Swarm, Workspace:GetServerTimeNow())
 end
 
+-- Queues exactly these Vrill as a swarm (the walkthrough's small practice swarm).
+function Spawner.group(makeup: { [EnemiesConfig.EnemyType]: number })
+	for enemyType, count in makeup do
+		for _ = 1, count do
+			table.insert(queue, enemyType)
+		end
+	end
+	MissionState.set(MissionState.KEYS.Swarm, Workspace:GetServerTimeNow())
+end
+
+-- Vrill queued but not yet spawned.
+function Spawner.pending(): number
+	return #queue
+end
+
 local function scheduleSwarm()
 	local band = EnemiesConfig.SWARM_INTERVAL
 	nextSwarm = os.clock() + rng:NextNumber(band[1], band[2])
@@ -114,12 +129,16 @@ function Spawner.stop()
 	table.clear(queue)
 end
 
-function Spawner.start()
+-- Starts spawning. A scripted run (the walkthrough) has no sleeping Vrill and no timed swarms;
+-- only the swarms it asks for.
+function Spawner.start(scripted: boolean)
 	local partySize = Runtime.get().launch.partySize
 	countScale = EnemiesConfig.COUNT_SCALE[partySize]
 	Hive.setHealthScale(EnemiesConfig.HEALTH_SCALE[partySize])
-	placeAmbient()
-	scheduleSwarm()
+	if not scripted then
+		placeAmbient()
+		scheduleSwarm()
+	end
 	-- Studio-only test hook: automated playtests call a swarm of a given size through this attribute.
 	if RunService:IsStudio() then
 		Workspace:GetAttributeChangedSignal("DevSwarm"):Connect(function()

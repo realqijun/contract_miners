@@ -257,7 +257,7 @@ local function launch()
 		rocket:Destroy()
 		driver:Destroy()
 		setStage("Done")
-		Extraction.call()
+		Extraction.call(nil)
 	end)
 	tween:Play()
 end

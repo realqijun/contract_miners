@@ -29,10 +29,16 @@ local DROP_HEIGHT = 60
 local DROP_SECONDS = 2.4
 
 local refillListeners: { (Player) -> () } = {}
+local calledListeners: { () -> () } = {}
 
 -- Called with each player who takes a refill, so tools and grenades can restock too.
 function Resupply.onRefill(callback: (Player) -> ())
 	table.insert(refillListeners, callback)
+end
+
+-- Called whenever a pod is bought.
+function Resupply.onCalled(callback: () -> ())
+	table.insert(calledListeners, callback)
 end
 
 local function setupPrompts(model: Model, body: BasePart)
@@ -106,6 +112,9 @@ function Resupply.call(position: Vector3): boolean
 		return false
 	end
 	MissionState.set(KEYS.Ferrin, pool - Resources.RESUPPLY_COST)
+	for _, listener in calledListeners do
+		task.spawn(listener)
+	end
 	-- Drill a shaft for it so it visibly comes through the ceiling.
 	local top = floor + Vector3.yAxis * DROP_HEIGHT
 	Digging.capsule(floor + Vector3.yAxis * 6, top, 3.4)

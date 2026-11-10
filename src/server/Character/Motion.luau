@@ -102,6 +102,11 @@ local function sample(player: Player, now: number)
 	end
 end
 
+-- Forgets where a character was, after the server itself moved it.
+function Motion.reset(player: Player)
+	watched[player] = nil
+end
+
 function Motion.start()
 	Players.PlayerRemoving:Connect(function(player)
 		watched[player] = nil

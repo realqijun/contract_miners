@@ -7,6 +7,7 @@ local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
 local Layout = require(Shared.Cave.Layout)
+local WalkthroughCave = require(Shared.Cave.WalkthroughCave)
 local Missions = require(Shared.Config.Missions)
 local MissionState = require(Shared.MissionState)
 local Resources = require(Shared.Config.Resources)
@@ -158,11 +159,15 @@ local function setupDepositPrompt(world: Runtime.World)
 	end)
 end
 
-function Deposits.populate()
-	local world = Runtime.get()
+local function createFolder()
 	folder = Instance.new("Folder")
 	folder.Name = "Minerals"
 	folder.Parent = Workspace
+end
+
+function Deposits.populate()
+	local world = Runtime.get()
+	createFolder()
 	local rng = Random.new(world.launch.seed * 7 + 3)
 	local dropcan = world.dropcan.model:GetPivot().Position
 	if world.launch.missionType == "Mining" then
@@ -170,6 +175,39 @@ function Deposits.populate()
 		setupDepositPrompt(world)
 	end
 	placePerCavern(rng, world, dropcan)
+	MissionState.set(KEYS.Ferrin, 0)
+	MissionState.observe(KEYS.Deposited, updateDropcanDisplay)
+end
+
+-- The walkthrough's hand-placed deposits: full Volticite veins and Ferrin nodes where each ray
+-- meets the rock, and a Volticite target of `target`.
+function Deposits.populateFixed(
+	volticite: { WalkthroughCave.SurfaceRay },
+	ferrin: { WalkthroughCave.SurfaceRay },
+	target: number
+)
+	local world = Runtime.get()
+	createFolder()
+	local rng = Random.new(world.launch.seed)
+	local function place(rays: { WalkthroughCave.SurfaceRay }, grow: (Vector3, Vector3) -> ())
+		for _, ray in rays do
+			local hit = Surface.raycast(ray.from, ray.toward.Unit * 80)
+			if hit then
+				grow(hit.position, hit.normal)
+			else
+				warn("Walkthrough deposit ray found no rock from", ray.from)
+			end
+		end
+	end
+	place(volticite, function(position, normal)
+		Minerals.volticite(folder, position, normal, rng, Resources.VOLTICITE_PER_VEIN)
+	end)
+	place(ferrin, function(position, normal)
+		Minerals.ferrin(folder, position, normal, rng, Resources.FERRIN_PER_NODE)
+	end)
+	MissionState.set(KEYS.Target, target)
+	MissionState.set(KEYS.Deposited, 0)
+	setupDepositPrompt(world)
 	MissionState.set(KEYS.Ferrin, 0)
 	MissionState.observe(KEYS.Deposited, updateDropcanDisplay)
 end

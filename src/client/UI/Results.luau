@@ -77,8 +77,13 @@ local function show()
 		return Theme.label(card, props)
 	end
 
+	local walkthrough = MissionState.get(KEYS.Walkthrough) == true
+	local heading = if success then "MISSION COMPLETE" else "MISSION FAILED"
+	if walkthrough then
+		heading = if success then "WALKTHROUGH COMPLETE" else "WALKTHROUGH OVER"
+	end
 	line({
-		Text = if success then "MISSION COMPLETE" else "MISSION FAILED",
+		Text = heading,
 		Font = Theme.FONT_HEAVY,
 		TextSize = 34,
 		Size = UDim2.new(1, 0, 0, 40),
@@ -91,9 +96,12 @@ local function show()
 	if MissionState.get(KEYS.MissionType) == "Mining" then
 		summary ..= `   ·   Volticite {MissionState.get(KEYS.Deposited) or 0} / {MissionState.get(KEYS.Target) or 0}`
 	end
+	if walkthrough then
+		summary = `Time {formatTime(ended - started)}   ·   Practice runs pay no rewards`
+	end
 	line({ Text = summary, TextSize = 16, TextColor3 = Theme.TEXT_DIM })
 
-	for _, member in Players:GetPlayers() do
+	for _, member in if walkthrough then {} else Players:GetPlayers() do
 		local classId = member:GetAttribute("Class")
 		local info = if Classes.isClassId(classId) then Classes.INFO[classId :: Classes.ClassId] else nil
 		local credits = member:GetAttribute("RewardCredits") or 0

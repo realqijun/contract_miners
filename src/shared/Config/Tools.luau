@@ -87,7 +87,8 @@ Tools.TOOLS = {
 		cooldown = 0.1,
 		range = 14,
 		regenPerSecond = 0,
-		digRadius = 2.8,
+		-- Tunnels 7 studs tall, so a 5-stud miner fits even where a tunnel climbs.
+		digRadius = 3.5,
 		damagePerTick = 9,
 		heatPerTick = 0.035,
 		coolPerSecond = 0.35,

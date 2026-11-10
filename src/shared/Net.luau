@@ -55,6 +55,8 @@ local REMOTES: { [string]: Kind } = {
 	ChooseMission = "Function",
 	-- Client starts the walkthrough, or declines the first-join offer: (play: boolean).
 	Walkthrough = "Event",
+	-- Client reports a walkthrough action the server cannot see: (action: "CameraToggle").
+	WalkthroughAction = "Event",
 	-- Server tells a player something brief: (text: string).
 	Notice = "Event",
 }

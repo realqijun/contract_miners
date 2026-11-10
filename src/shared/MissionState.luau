@@ -39,6 +39,10 @@ MissionState.KEYS = {
 	WellsConnected = "WellsConnected",
 	PumpProgress = "PumpProgress",
 	PipesBroken = "PipesBroken",
+	-- Walkthrough: true on the guided run, the current step (Config.Walkthrough.Step) and its number.
+	Walkthrough = "Walkthrough",
+	WalkthroughStep = "WalkthroughStep",
+	WalkthroughIndex = "WalkthroughIndex",
 }
 
 local function holder(): Instance

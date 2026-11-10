@@ -49,23 +49,46 @@ local function aimHit(range: number): RaycastResult?
 	return nil
 end
 
--- Reels the character towards `point`, then lets go.
-local function pull(point: Vector3, speed: number)
+-- How far above the hooked point the grapple reels the character, so a hook on the edge of a
+-- ledge brings their feet up level with it.
+local GRAPPLE_LIFT = 4.5
+local GRAPPLE_ARRIVE = 2.5
+local GRAPPLE_MAX_SECONDS = 1.4
+-- The hop on letting go: on over the edge towards the rock, and up. The Humanoid stays aside
+-- for the hop too, as its air control would otherwise brake the forward part straight away.
+local GRAPPLE_HOP_FORWARD = 14
+local GRAPPLE_HOP_UP = 30
+local GRAPPLE_HOP_SECONDS = 0.35
+
+-- Reels the character towards a hooked surface point, then lets go with a hop onto it.
+-- The Humanoid stands aside while reeling, or touching the floor would pin the character there.
+local function pull(hook: Vector3, normal: Vector3, speed: number)
 	local character = player.Character
 	local root = character and character.PrimaryPart
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	if not (root and humanoid) then
 		return
 	end
-	humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+	local point = hook + normal * 2 + Vector3.yAxis * GRAPPLE_LIFT
+	humanoid.PlatformStand = true
 	local started = os.clock()
 	local connection
 	connection = RunService.Heartbeat:Connect(function()
 		local offset = point - root.Position
-		if offset.Magnitude < 3.5 or os.clock() - started > 1.4 or player:GetAttribute("Downed") == true then
+		if
+			offset.Magnitude < GRAPPLE_ARRIVE
+			or os.clock() - started > GRAPPLE_MAX_SECONDS
+			or player:GetAttribute("Downed") == true
+			or humanoid.Health <= 0
+		then
 			connection:Disconnect()
-			-- A little hop at the end so players land on ledges instead of sliding off.
-			root.AssemblyLinearVelocity = offset.Unit * 8 + Vector3.yAxis * 18
+			local towards = Vector3.new(hook.X - root.Position.X, 0, hook.Z - root.Position.Z)
+			local forward = if towards.Magnitude > 0.1 then towards.Unit * GRAPPLE_HOP_FORWARD else Vector3.zero
+			root.AssemblyLinearVelocity = forward + Vector3.yAxis * GRAPPLE_HOP_UP
+			task.delay(GRAPPLE_HOP_SECONDS, function()
+				humanoid.PlatformStand = false
+				humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
+			end)
 			return
 		end
 		root.AssemblyLinearVelocity = offset.Unit * speed
@@ -171,7 +194,7 @@ return function(toolId: string): Loadout.Item
 			end
 			lastUse = now
 			send("Use")
-			pull(hit.Position + hit.Normal * 2, stats.pullSpeed)
+			pull(hit.Position, hit.Normal, stats.pullSpeed)
 			Effects.rope(Viewmodel.point("Muzzle") or CameraController.aimRay(), hit.Position)
 			return
 		end

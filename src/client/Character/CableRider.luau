@@ -1,6 +1,7 @@
 --!strict
 -- Riding Heavy Weapons cables: press interact near a cable to slide along it towards the end you
--- face; jump to let go. Anyone can ride, whatever their class.
+-- face; jump to let go, or ride to the end to step off onto whatever it is anchored to.
+-- Anyone can ride, whatever their class.
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
@@ -15,6 +16,14 @@ local CableRider = {}
 
 local GRAB_DISTANCE = ToolsConfig.CABLE_GRAB_DISTANCE
 local HANG = ToolsConfig.CABLE_HANG
+-- Over the last stretch of a ride the rider climbs from hanging under the line to standing a
+-- little above its end, then hops on towards the anchor, so a cable up to a ledge lands them on it.
+local END_STRETCH = 5
+local END_RISE = 3
+local HOP_FORWARD = 14
+local HOP_UP = 30
+-- The Humanoid stays aside for the hop, or its air control would brake it straight away.
+local HOP_SECONDS = 0.35
 
 local player = Players.LocalPlayer
 
@@ -29,6 +38,19 @@ local function stop(humanoid: Humanoid?)
 		humanoid.PlatformStand = false
 		humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
 	end
+end
+
+local function dismount(root: BasePart, humanoid: Humanoid, along: Vector3)
+	if riding then
+		riding:Disconnect()
+		riding = nil
+	end
+	local flat = Vector3.new(along.X, 0, along.Z)
+	local forward = if flat.Magnitude > 0.1 then flat.Unit * HOP_FORWARD else Vector3.zero
+	root.AssemblyLinearVelocity = forward + Vector3.yAxis * HOP_UP
+	task.delay(HOP_SECONDS, function()
+		stop(humanoid)
+	end)
 end
 
 local function nearestCable(position: Vector3): (Vector3?, Vector3?, number, number)
@@ -70,11 +92,17 @@ local function ride()
 	humanoid.PlatformStand = true
 	riding = RunService.Heartbeat:Connect(function(dt)
 		travelled += speed * dt
-		if travelled >= length - 1 or humanoid.Health <= 0 or player:GetAttribute("Downed") == true then
+		if humanoid.Health <= 0 or player:GetAttribute("Downed") == true then
 			stop(humanoid)
 			return
+		elseif travelled >= length then
+			dismount(root, humanoid, to - from)
+			return
 		end
-		local point = from + (to - from).Unit * travelled - Vector3.yAxis * HANG
+		local remaining = length - travelled
+		local climb = math.clamp(1 - remaining / END_STRETCH, 0, 1)
+		local hang = HANG + (-END_RISE - HANG) * climb
+		local point = from + (to - from).Unit * travelled - Vector3.yAxis * hang
 		root.CFrame = CFrame.lookAlong(point, Vector3.new(to.X - from.X, 0, to.Z - from.Z))
 		root.AssemblyLinearVelocity = (to - from).Unit * speed
 	end)

@@ -18,7 +18,7 @@ function Objectives.start()
 		MissionState.observe(KEYS.Deposited, function(deposited)
 			local target = MissionState.get(KEYS.Target)
 			if type(deposited) == "number" and type(target) == "number" and deposited >= target then
-				Extraction.call()
+				Extraction.call(nil)
 			end
 		end)
 	else

@@ -3,6 +3,7 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
@@ -15,6 +16,7 @@ local Client = script.Parent.Parent
 local CameraController = require(Client.Character.CameraController)
 local Viewmodel = require(Client.Character.Viewmodel)
 local Effects = require(Client.Effects)
+local EquipmentHud = require(Client.UI.EquipmentHud)
 local Loadout = require(script.Parent.Loadout)
 
 local player = Players.LocalPlayer
@@ -44,6 +46,17 @@ return function(): Loadout.Item
 	local lastSwing = 0
 	local lastHeavy = -math.huge
 	local equipped = false
+	local statusConnection: RBXScriptConnection? = nil
+
+	-- The equipment panel shows the heavy swing's cooldown while the pickaxe is in hand.
+	local function showStatus()
+		local cooldown = math.clamp((os.clock() - lastHeavy) / PickaxeConfig.HEAVY_COOLDOWN, 0, 1)
+		EquipmentHud.show({
+			name = "Pickaxe",
+			bar = cooldown,
+			note = if cooldown >= 1 then "Heavy swing ready" else nil,
+		})
+	end
 
 	local function predictImpact()
 		local origin, direction = CameraController.aimRay()
@@ -97,10 +110,16 @@ return function(): Loadout.Item
 				then Classes.INFO[classId :: Classes.ClassId].color
 				else Color3.new(1, 1, 1)
 			Viewmodel.hold(Items.build("Pickaxe", accent), GRIP, HOLD)
+			showStatus()
+			statusConnection = RunService.Heartbeat:Connect(showStatus)
 		end,
 		unequip = function()
 			equipped = false
 			swinging = false
+			if statusConnection then
+				statusConnection:Disconnect()
+				statusConnection = nil
+			end
 		end,
 		fire = function(down)
 			if down then

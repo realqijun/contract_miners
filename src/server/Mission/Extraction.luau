@@ -10,6 +10,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
+local CaveConfig = require(Shared.Config.Cave)
 local Missions = require(Shared.Config.Missions)
 local MissionState = require(Shared.MissionState)
 
@@ -26,6 +27,7 @@ local Runtime = require(script.Parent.Runtime)
 local Extraction = {}
 
 local KEYS = MissionState.KEYS
+local VOXEL = CaveConfig.VOXEL
 local DESCENT_SECONDS = 10
 local DROP_HEIGHT = 70
 
@@ -81,7 +83,10 @@ end
 local function countdown(model: Model, deck: BasePart)
 	local launchAt = os.clock() + Missions.LIFT_POD_COUNTDOWN
 	MissionState.set(KEYS.LiftLaunchAt, Workspace:GetServerTimeNow() + Missions.LIFT_POD_COUNTDOWN)
-	Spawner.swarm(1.2)
+	-- The Lift Pod's arrival stirs up a swarm, except on the walkthrough's practice run.
+	if not Runtime.get().launch.walkthrough then
+		Spawner.swarm(1.2)
+	end
 	local connection
 	connection = RunService.Heartbeat:Connect(function()
 		if Flow.isOver() then
@@ -117,19 +122,38 @@ local function countdown(model: Model, deck: BasePart)
 	end)
 end
 
--- Calls the Lift Pod. Safe to call more than once; only the first call counts.
-function Extraction.call()
+-- Calls the Lift Pod, to the floor below `at` when given, else far from the crew.
+-- Safe to call more than once; only the first call counts.
+function Extraction.call(at: Vector3?)
 	if called or Flow.isOver() then
 		return
 	end
 	called = true
 	MissionState.set(KEYS.Phase, "Extraction")
-	local site = chooseLandingSite()
+	local floor = if at then Surface.floorBelow(at, 40) or at else chooseLandingSite()
+	-- Land on the terrain voxel grid, so the apron below comes out flat.
+	local site = Vector3.new(floor.X, math.round(floor.Y / VOXEL) * VOXEL, floor.Z)
 	MissionState.set(KEYS.LiftLandsAt, Workspace:GetServerTimeNow() + DESCENT_SECONDS)
 	Digging.capsule(site + Vector3.yAxis * 10, site + Vector3.yAxis * DROP_HEIGHT, LiftPod.DECK_RADIUS + 2)
 	-- Clear standing room around the deck too.
 	Digging.sphere(site + Vector3.yAxis * 6, LiftPod.DECK_RADIUS + 3)
-	local model, deck = LiftPod.build(CFrame.new(site))
+	-- A flat apron level with the deck, so the crew can walk on from any side: air above it, rock
+	-- below. Smooth terrain slopes from its rim to the floor around it.
+	local apron = LiftPod.DECK_RADIUS + 5
+	Workspace.Terrain:FillCylinder(CFrame.new(site + Vector3.yAxis * VOXEL), VOXEL * 2, apron, Enum.Material.Air)
+	Workspace.Terrain:FillCylinder(CFrame.new(site - Vector3.yAxis * VOXEL), VOXEL * 2, apron, Enum.Material.Slate)
+	-- The smooth surface is not exactly on the voxel boundary, so the deck sits on what was built,
+	-- measured once the terrain edit has reached collision.
+	task.wait()
+	local surface = Surface.floorBelow(site + Vector3.yAxis * VOXEL * 2, VOXEL * 4)
+	if surface then
+		site = Vector3.new(site.X, surface.Y, site.Z)
+	end
+	-- Open side towards the crew, so they walk straight in.
+	local from = crewCentroid() or Runtime.get().landing
+	local facing = Vector3.new(from.X, site.Y, from.Z)
+	local base = if (facing - site).Magnitude > 1 then CFrame.lookAt(site, facing) else CFrame.new(site)
+	local model, deck = LiftPod.build(base)
 	local landed = model:GetPivot()
 	model:PivotTo(landed + Vector3.yAxis * DROP_HEIGHT)
 	model:SetAttribute("MarkerLabel", "Lift Pod")

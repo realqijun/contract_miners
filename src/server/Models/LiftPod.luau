@@ -14,14 +14,16 @@ local ORANGE = Color3.fromRGB(232, 120, 36)
 
 LiftPod.DECK_RADIUS = 6
 
--- Builds the pod with its deck at `base`. Returns the model and the deck part.
+-- Builds the pod with its deck at `base`, its open side facing along `base`'s look vector.
+-- Returns the model and the deck part.
 function LiftPod.build(base: CFrame): (Model, BasePart)
 	local model = Build.model("LiftPod")
 	local deck = Build.part(model, {
 		name = "Deck",
 		shape = Enum.PartType.Cylinder,
 		size = Vector3.new(LiftPod.DECK_RADIUS * 2 + 1, 1, 0),
-		cframe = base * CFrame.new(0, 0.5, 0),
+		-- Flush with the floor it lands on, so the crew walks straight on.
+		cframe = base * CFrame.new(0, -0.5, 0),
 		color = TRIM,
 		material = Enum.Material.DiamondPlate,
 	})
@@ -29,7 +31,7 @@ function LiftPod.build(base: CFrame): (Model, BasePart)
 		name = "DeckRing",
 		shape = Enum.PartType.Cylinder,
 		size = Vector3.new(LiftPod.DECK_RADIUS * 2 + 1.6, 0.4, 0),
-		cframe = base * CFrame.new(0, 0.9, 0),
+		cframe = base * CFrame.new(0, -0.1, 0),
 		color = GREEN,
 		material = Enum.Material.Neon,
 		collide = false,
@@ -38,11 +40,11 @@ function LiftPod.build(base: CFrame): (Model, BasePart)
 	-- Curved back wall from pillars, leaving the front (-Z) open.
 	for k = 0, 8 do
 		local angle = math.rad(40 + k * 35)
-		local out = Vector3.new(math.sin(angle), 0, math.cos(angle))
+		local out = base:VectorToWorldSpace(Vector3.new(math.sin(angle), 0, -math.cos(angle)))
 		Build.part(model, {
 			name = "Wall",
 			size = Vector3.new(4.3, 11, 0.8),
-			cframe = CFrame.lookAlong(base.Position + out * (LiftPod.DECK_RADIUS + 0.3) + Vector3.yAxis * 6.5, out),
+			cframe = CFrame.lookAlong(base.Position + out * (LiftPod.DECK_RADIUS + 0.3) + Vector3.yAxis * 5.5, out),
 			color = HULL,
 			material = Enum.Material.Metal,
 		})

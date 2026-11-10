@@ -10,6 +10,8 @@ local Workspace = game:GetService("Workspace")
 local Shared = ReplicatedStorage.Shared
 local Classes = require(Shared.Config.Classes)
 local Layout = require(Shared.Cave.Layout)
+local WalkthroughCave = require(Shared.Cave.WalkthroughCave)
+local WalkthroughConfig = require(Shared.Config.Walkthrough)
 local LaunchData = require(Shared.LaunchData)
 local Missions = require(Shared.Config.Missions)
 local MissionState = require(Shared.MissionState)
@@ -39,6 +41,7 @@ local PlayerData = require(Server.Data.PlayerData)
 local Progress = require(Shared.Progress)
 local Objectives = require(Server.Mission.Objectives)
 local Resupply = require(Server.Mission.Resupply)
+local Walkthrough = require(Server.Mission.Walkthrough)
 
 local KEYS = MissionState.KEYS
 
@@ -48,17 +51,19 @@ PlayerData.start()
 MissionState.set(KEYS.Phase, "Loading")
 
 -- Studio playtests have no hub teleport, so they launch a solo Mining run with a random seed.
--- Setting the DevMissionType, DevSeed or DevClass attributes on Workspace overrides those defaults.
+-- Setting the DevMissionType, DevSeed or DevClass attributes on Workspace overrides those defaults,
+-- and DevWalkthrough = true runs the walkthrough instead.
 local function studioLaunch(player: Player): LaunchData.LaunchData
 	local missionType = Workspace:GetAttribute("DevMissionType")
 	local seed = Workspace:GetAttribute("DevSeed")
 	local classId = Workspace:GetAttribute("DevClass")
+	local walkthrough = Workspace:GetAttribute("DevWalkthrough") == true
 	return {
-		missionType = if Missions.isMissionType(missionType) then missionType else "Mining",
+		missionType = if Missions.isMissionType(missionType) and not walkthrough then missionType else "Mining",
 		seed = if type(seed) == "number" then seed else Random.new():NextInteger(1, LaunchData.MAX_SEED),
 		partySize = 1,
 		classes = { [tostring(player.UserId)] = if Classes.isClassId(classId) then classId else "Scout" },
-		walkthrough = false,
+		walkthrough = walkthrough,
 	}
 end
 
@@ -81,7 +86,13 @@ MissionState.set(KEYS.Seed, launch.seed)
 MissionState.set(KEYS.PartySize, launch.partySize)
 
 Atmosphere.apply()
-local layout = Layout.generate(launch.seed)
+-- The walkthrough plays in its own fixed cave; every other mission generates one from the seed.
+local layout, spots
+if launch.walkthrough then
+	layout, spots = WalkthroughCave.build()
+else
+	layout = Layout.generate(launch.seed)
+end
 Carver.carve(layout)
 
 local startCavern = layout.caverns[layout.startCavern]
@@ -89,7 +100,11 @@ local landing = Surface.floorBelow(Surface.cavernOrigin(startCavern), startCaver
 	or Vector3.new(startCavern.center.X, startCavern.floorY, startCavern.center.Z)
 local dropcan = Dropcan.build(Workspace, CFrame.new(landing))
 Runtime.init({ launch = launch, layout = layout, dropcan = dropcan, landing = landing })
-Deposits.populate()
+if spots then
+	Deposits.populateFixed(spots.volticite, spots.ferrin, WalkthroughConfig.VOLTICITE_TARGET)
+else
+	Deposits.populate()
+end
 
 Vitals.start()
 Motion.start()
@@ -99,13 +114,21 @@ Weapons.start()
 Tools.start()
 Projectiles.start()
 Hive.start()
-Spawner.start()
+Spawner.start(launch.walkthrough)
 Revive.start()
 Pings.start()
-Objectives.start()
+if spots then
+	Walkthrough.start(spots)
+else
+	Objectives.start()
+end
 Resupply.onRefill(Tools.refill)
--- Bank every crew member's rewards the moment the mission ends.
+-- Bank every crew member's rewards the moment the mission ends. The walkthrough is practice and
+-- leaves progress untouched.
 Flow.onEnded(function(outcome, rewards)
+	if launch.walkthrough then
+		return
+	end
 	for player, reward in rewards do
 		local classId = launch.classes[tostring(player.UserId)]
 		if classId then

@@ -11,11 +11,13 @@ local Shared = ReplicatedStorage.Shared
 local Build = require(Shared.Build)
 local Classes = require(Shared.Config.Classes)
 local PlayerConfig = require(Shared.Config.Player)
+local WalkthroughConfig = require(Shared.Config.Walkthrough)
 
 local Server = script.Parent.Parent
 local Vitals = require(Server.Character.Vitals)
 local Crew = require(script.Parent.Crew)
 local Flow = require(script.Parent.Flow)
+local Runtime = require(script.Parent.Runtime)
 
 local Revive = {}
 
@@ -30,7 +32,8 @@ local function checkWipe()
 	if Flow.isOver() then
 		return
 	end
-	if #Crew.standing() == 0 then
+	-- The walkthrough gets players back up on its own instead of ending.
+	if #Crew.standing() == 0 and not Runtime.get().launch.walkthrough then
 		Flow.fail("The whole crew went down")
 	end
 end
@@ -122,6 +125,14 @@ local function bleedOut(player: Player)
 	checkWipe()
 end
 
+-- Brings a downed player back up and clears their bleed-out timer and revive prompt.
+local function standUp(player: Player)
+	bleedOutAt[player] = nil
+	player:SetAttribute("BleedOutAt", nil)
+	clearPrompt(player)
+	Vitals.revive(player, PlayerConfig.REVIVE_HEALTH_FRACTION)
+end
+
 local function onDowned(player: Player)
 	if Flow.isOver() then
 		return
@@ -141,13 +152,18 @@ local function onDowned(player: Player)
 		prompt.Parent = root
 		prompt.Triggered:Connect(function(reviver)
 			if reviver ~= player and Vitals.isAlive(reviver) and Vitals.isDowned(player) then
-				bleedOutAt[player] = nil
-				player:SetAttribute("BleedOutAt", nil)
-				clearPrompt(player)
-				Vitals.revive(player, PlayerConfig.REVIVE_HEALTH_FRACTION)
+				standUp(player)
 			end
 		end)
 		prompts[player] = prompt
+	end
+	if Runtime.get().launch.walkthrough then
+		-- The walkthrough's practice run puts players back on their feet after a moment.
+		task.delay(WalkthroughConfig.SELF_REVIVE_SECONDS, function()
+			if Vitals.isDowned(player) and not Flow.isOver() then
+				standUp(player)
+			end
+		end)
 	end
 	checkWipe()
 end
