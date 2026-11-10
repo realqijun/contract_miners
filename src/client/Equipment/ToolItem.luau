@@ -11,7 +11,7 @@ local Shared = ReplicatedStorage.Shared
 local Classes = require(Shared.Config.Classes)
 local Items = require(Shared.Models.Items)
 local Net = require(Shared.Net)
-local ToolsConfig = require(Shared.Config.Tools)
+local Stats = require(Shared.Stats)
 
 local Client = script.Parent.Parent
 local CameraController = require(Client.Character.CameraController)
@@ -73,7 +73,7 @@ local function pull(point: Vector3, speed: number)
 end
 
 return function(toolId: string): Loadout.Item
-	local stats = ToolsConfig.TOOLS[toolId]
+	local stats = Stats.toolFor(player, toolId)
 	local equipped = false
 	local triggerHeld = false
 	local lastUse = 0
@@ -205,6 +205,7 @@ return function(toolId: string): Loadout.Item
 	local item: Loadout.Item = {
 		equip = function()
 			equipped = true
+			stats = Stats.toolFor(player, toolId)
 			local classId = player:GetAttribute("Class")
 			local accent = if Classes.isClassId(classId)
 				then Classes.INFO[classId :: Classes.ClassId].color

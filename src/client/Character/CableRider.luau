@@ -34,8 +34,8 @@ local function stop(root: BasePart?, humanoid: Humanoid?)
 	end
 end
 
-local function nearestCable(position: Vector3): (Vector3?, Vector3?, number)
-	local bestA, bestB, bestT, bestDistance = nil, nil, 0, GRAB_DISTANCE
+local function nearestCable(position: Vector3): (Vector3?, Vector3?, number, number)
+	local bestA, bestB, bestT, bestDistance, bestSpeed = nil, nil, 0, GRAB_DISTANCE, 0
 	for _, cable in CollectionService:GetTagged("Cable") do
 		local a = cable:GetAttribute("A")
 		local b = cable:GetAttribute("B")
@@ -44,11 +44,13 @@ local function nearestCable(position: Vector3): (Vector3?, Vector3?, number)
 			local t = math.clamp((position + Vector3.yAxis * HANG - a):Dot(ab) / ab:Dot(ab), 0, 1)
 			local distance = (a + ab * t - (position + Vector3.yAxis * HANG)).Magnitude
 			if distance < bestDistance then
+				local speed = cable:GetAttribute("RideSpeed")
 				bestA, bestB, bestT, bestDistance = a, b, t, distance
+				bestSpeed = if type(speed) == "number" then speed else ToolsConfig.TOOLS.CableLauncher.rideSpeed
 			end
 		end
 	end
-	return bestA, bestB, bestT
+	return bestA, bestB, bestT, bestSpeed
 end
 
 local function ride()
@@ -58,7 +60,7 @@ local function ride()
 	if riding or not (root and humanoid) or player:GetAttribute("Downed") == true then
 		return
 	end
-	local a, b, t = nearestCable(root.Position)
+	local a, b, t, speed = nearestCable(root.Position)
 	if not (a and b) then
 		return
 	end
@@ -69,7 +71,6 @@ local function ride()
 	local length = (to - from).Magnitude
 	local travelled = if towardsB then t * length else (1 - t) * length
 	humanoid.PlatformStand = true
-	local speed = ToolsConfig.TOOLS.CableLauncher.rideSpeed
 	riding = RunService.Heartbeat:Connect(function(dt)
 		travelled += speed * dt
 		if travelled >= length - 1 or humanoid.Health <= 0 or player:GetAttribute("Downed") == true then

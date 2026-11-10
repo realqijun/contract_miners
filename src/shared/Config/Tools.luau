@@ -40,7 +40,8 @@ Tools.TOOLS = {
 	GrappleLine = {
 		displayName = "Grapple Line",
 		description = "Hooks a surface up to 30 studs away and reels you in.",
-		charges = 1,
+		-- Limited only by its cooldown.
+		charges = 0,
 		cooldown = 4,
 		range = 30,
 		regenPerSecond = 0,

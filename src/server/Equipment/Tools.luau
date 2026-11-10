@@ -14,6 +14,7 @@ local Build = require(Shared.Build)
 local Classes = require(Shared.Config.Classes)
 local Kits = require(Shared.Config.Kits)
 local Net = require(Shared.Net)
+local Stats = require(Shared.Stats)
 local ToolsConfig = require(Shared.Config.Tools)
 
 local Server = script.Parent.Parent
@@ -42,8 +43,9 @@ local states: { [Player]: PlayerState } = {}
 local structures: Folder
 local pads: { BasePart } = {}
 
-local function statsFor(id: string): ToolsConfig.ToolStats
-	return ToolsConfig.TOOLS[id] or ToolsConfig.GRENADES[id]
+-- The tool's stats with this player's upgrades applied.
+local function statsFor(player: Player, id: string): ToolsConfig.ToolStats
+	return Stats.toolFor(player, id)
 end
 
 local function kitOf(player: Player): Kits.Kit?
@@ -84,7 +86,7 @@ end
 
 -- Spends a charge if the tool is off cooldown and has one. Tools with no charges never spend.
 local function spend(player: Player, state: PlayerState, id: string): boolean
-	local stats = statsFor(id)
+	local stats = statsFor(player, id)
 	local now = os.clock()
 	if now - (state.lastUse[id] or 0) < stats.cooldown * 0.85 then
 		return false
@@ -112,7 +114,7 @@ end
 -- Traversal and support tools
 
 local function foam(player: Player, state: PlayerState, ray: Aim.Ray)
-	local stats = ToolsConfig.TOOLS.FoamProjector
+	local stats = statsFor(player, "FoamProjector")
 	local result = Aim.cast(player, ray, stats.range)
 	if not result or not spend(player, state, "FoamProjector") then
 		return
@@ -175,7 +177,7 @@ local function pylonModel(position: Vector3, color: Color3): BasePart
 end
 
 local function pylons(player: Player, state: PlayerState, ray: Aim.Ray)
-	local stats = ToolsConfig.TOOLS.ArcPylons
+	local stats = statsFor(player, "ArcPylons")
 	local result = Aim.cast(player, ray, stats.range)
 	if not result or result.Normal.Y < 0.6 then
 		return
@@ -247,7 +249,7 @@ local function pylons(player: Player, state: PlayerState, ray: Aim.Ray)
 end
 
 local function grapple(player: Player, state: PlayerState, ray: Aim.Ray)
-	local stats = ToolsConfig.TOOLS.GrappleLine
+	local stats = statsFor(player, "GrappleLine")
 	local result = Aim.cast(player, ray, stats.range)
 	if not result or not spend(player, state, "GrappleLine") then
 		return
@@ -258,7 +260,7 @@ local function grapple(player: Player, state: PlayerState, ray: Aim.Ray)
 end
 
 local function lumen(player: Player, state: PlayerState, ray: Aim.Ray)
-	local stats = ToolsConfig.TOOLS.LumenDarts
+	local stats = statsFor(player, "LumenDarts")
 	if not spend(player, state, "LumenDarts") then
 		return
 	end
@@ -307,7 +309,7 @@ local function lumen(player: Player, state: PlayerState, ray: Aim.Ray)
 end
 
 local function cable(player: Player, state: PlayerState, ray: Aim.Ray)
-	local stats = ToolsConfig.TOOLS.CableLauncher
+	local stats = statsFor(player, "CableLauncher")
 	local root = player.Character and player.Character.PrimaryPart
 	if not root then
 		return
@@ -352,11 +354,12 @@ local function cable(player: Player, state: PlayerState, ray: Aim.Ray)
 	rope.Parent = a
 	model:SetAttribute("A", start)
 	model:SetAttribute("B", finish)
+	model:SetAttribute("RideSpeed", stats.rideSpeed)
 	CollectionService:AddTag(model, "Cable")
 end
 
 local function dome(player: Player, state: PlayerState)
-	local stats = ToolsConfig.TOOLS.AegisDome
+	local stats = statsFor(player, "AegisDome")
 	local root = player.Character and player.Character.PrimaryPart
 	if not root or not spend(player, state, "AegisDome") then
 		return
@@ -380,7 +383,7 @@ local function dome(player: Player, state: PlayerState)
 end
 
 local function cutter(player: Player, state: PlayerState, ray: Aim.Ray)
-	local stats = ToolsConfig.TOOLS.PlasmaCutter
+	local stats = statsFor(player, "PlasmaCutter")
 	local now = os.clock()
 	if now < state.overheatedUntil or not spend(player, state, "PlasmaCutter") then
 		return
@@ -410,7 +413,7 @@ local function cutter(player: Player, state: PlayerState, ray: Aim.Ray)
 end
 
 local function satchel(player: Player, state: PlayerState, ray: Aim.Ray)
-	local stats = ToolsConfig.TOOLS.SatchelCharge
+	local stats = statsFor(player, "SatchelCharge")
 	if not spend(player, state, "SatchelCharge") then
 		return
 	end
@@ -446,7 +449,7 @@ local function satchel(player: Player, state: PlayerState, ray: Aim.Ray)
 end
 
 local function detonate(player: Player, state: PlayerState)
-	local stats = ToolsConfig.TOOLS.SatchelCharge
+	local stats = statsFor(player, "SatchelCharge")
 	local placed = state.satchels
 	state.satchels = {}
 	player:SetAttribute("SatchelsPlaced", 0)
@@ -471,7 +474,7 @@ end
 -- Grenades and flares
 
 local function grenadeImpact(player: Player, id: string, position: Vector3)
-	local stats = ToolsConfig.GRENADES[id]
+	local stats = statsFor(player, id)
 	if id == "DecoyBeacon" then
 		local beacon = neonPart(structures, {
 			name = "Decoy",
@@ -669,7 +672,7 @@ function Tools.arm(player: Player)
 		}
 	states[player] = state
 	for _, id in { kit.traversal, kit.support, kit.grenade } do
-		state.charges[id] = statsFor(id).charges
+		state.charges[id] = statsFor(player, id).charges
 		publish(player, id, state.charges[id])
 	end
 	state.charges.Flares = ToolsConfig.FLARES.charges
@@ -699,7 +702,7 @@ function Tools.start()
 				continue
 			end
 			for _, id in { kit.traversal, kit.support } do
-				local stats = statsFor(id)
+				local stats = statsFor(player, id)
 				if stats.regenPerSecond > 0 and (state.charges[id] or 0) < stats.charges then
 					state.regen[id] = (state.regen[id] or 0) + stats.regenPerSecond * dt
 					if state.regen[id] >= 1 then
@@ -720,7 +723,7 @@ function Tools.start()
 			-- The cutter only cools while it is not cutting.
 			if state.heat > 0 and os.clock() - (state.lastUse.PlasmaCutter or 0) > 0.3 then
 				local before = math.floor(state.heat * 20)
-				state.heat = math.max(0, state.heat - ToolsConfig.TOOLS.PlasmaCutter.coolPerSecond * dt)
+				state.heat = math.max(0, state.heat - statsFor(player, "PlasmaCutter").coolPerSecond * dt)
 				if math.floor(state.heat * 20) ~= before then
 					player:SetAttribute("Heat_PlasmaCutter", math.floor(state.heat * 100) / 100)
 				end
