@@ -24,6 +24,8 @@ local Hud = require(Client.UI.Hud)
 local EnemyAnimator = require(Client.EnemyAnimator)
 local Downed = require(Client.Character.Downed)
 local Results = require(Client.UI.Results)
+local Markers = require(Client.UI.Markers)
+local Ping = require(Client.Ping)
 
 -- The game draws its own HUD; the default backpack and health bar would duplicate it.
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
@@ -38,6 +40,8 @@ Viewmodel.start()
 Hud.start()
 EnemyAnimator.start()
 Results.start()
+Markers.start()
+Ping.start()
 
 local localPlayer = Players.LocalPlayer
 

@@ -32,6 +32,7 @@ local Runtime = require(Server.Mission.Runtime)
 local Crew = require(Server.Mission.Crew)
 local Flow = require(Server.Mission.Flow)
 local Revive = require(Server.Mission.Revive)
+local Pings = require(Server.Mission.Pings)
 
 local KEYS = MissionState.KEYS
 
@@ -91,6 +92,7 @@ Projectiles.start()
 Hive.start()
 Spawner.start()
 Revive.start()
+Pings.start()
 
 Flow.begin()
 Players.PlayerAdded:Connect(Crew.land)

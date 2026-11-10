@@ -35,6 +35,10 @@ local REMOTES: { [string]: Kind } = {
 	EnemyAttack = "Unreliable",
 	-- A Vrill died here: (position: Vector3, size: number).
 	EnemyDied = "Unreliable",
+	-- Client pings along its aim: (origin: Vector3, direction: Vector3, callResupply: boolean).
+	Ping = "Event",
+	-- Server shows a ping to everyone: (pinger: Player, position: Vector3, label: string).
+	PingShown = "Event",
 }
 
 local CLASS_FOR_KIND: { [Kind]: string } = {

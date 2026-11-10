@@ -14,6 +14,7 @@ local MissionState = require(Shared.MissionState)
 local PlayerConfig = require(Shared.Config.Player)
 local Resources = require(Shared.Config.Resources)
 local Theme = require(script.Parent.Theme)
+local Input = require(script.Parent.Parent.Input)
 
 local Hud = {}
 Hud._hitToken = nil :: {}?
@@ -151,7 +152,7 @@ local function objective()
 		ferrin.Text = `Ferrin  {pool % Resources.RESUPPLY_COST} / {Resources.RESUPPLY_COST}`
 			.. (
 				if pool >= Resources.RESUPPLY_COST
-					then `   ·   {pool // Resources.RESUPPLY_COST} resupply ready`
+					then `   ·   hold {Input.label("Ping")} for resupply ({pool // Resources.RESUPPLY_COST})`
 					else ""
 			)
 	end

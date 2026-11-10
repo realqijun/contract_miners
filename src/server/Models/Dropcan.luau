@@ -1,6 +1,8 @@
 --!strict
 -- The Dropcan: the pod the crew arrives in. It stays in place as the team's base and Volticite deposit.
 
+local CollectionService = game:GetService("CollectionService")
+
 local Build = require(game:GetService("ReplicatedStorage").Shared.Build)
 
 local Dropcan = {}
@@ -237,6 +239,9 @@ function Dropcan.build(parent: Instance, base: CFrame): Dropcan
 	Build.light(hull, "PointLight", { Color = WARM_LIGHT, Range = 22, Brightness = 0.8, Shadows = false })
 
 	model.PrimaryPart = hull
+	model:SetAttribute("MarkerLabel", "Dropcan")
+	model:SetAttribute("MarkerColor", ACCENT)
+	CollectionService:AddTag(model, "Marker")
 	model.Parent = parent
 
 	return {
