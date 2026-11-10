@@ -4,6 +4,8 @@
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
 local Classes = require(Shared.Config.Classes)
@@ -247,6 +249,45 @@ local function team()
 	end
 end
 
+-- A banner across the top when a swarm is called.
+local function swarmWarning()
+	local banner = Theme.label(gui, {
+		Name = "SwarmWarning",
+		AnchorPoint = Vector2.new(0.5, 0),
+		Position = UDim2.new(0.5, 0, 0, 90),
+		Size = UDim2.fromOffset(600, 40),
+		Font = Theme.FONT_HEAVY,
+		TextSize = 30,
+		TextColor3 = Theme.WARNING,
+		TextXAlignment = Enum.TextXAlignment.Center,
+		Text = "THE HIVE IS COMING",
+		TextTransparency = 1,
+	})
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = Color3.new(0, 0, 0)
+	stroke.Transparency = 1
+	stroke.Parent = banner
+	local shown: number? = nil
+	MissionState.observe(KEYS.Swarm, function(value)
+		if value == nil or value == shown then
+			return
+		end
+		local first = shown == nil
+		shown = value
+		if first and Workspace:GetServerTimeNow() - value > 5 then
+			return
+		end
+		banner.TextTransparency = 0
+		stroke.Transparency = 0.4
+		task.delay(3.5, function()
+			if shown == value then
+				TweenService:Create(banner, TweenInfo.new(0.8), { TextTransparency = 1 }):Play()
+				TweenService:Create(stroke, TweenInfo.new(0.8), { Transparency = 1 }):Play()
+			end
+		end)
+	end)
+end
+
 function Hud.start()
 	gui = Instance.new("ScreenGui")
 	gui.Name = "Hud"
@@ -258,6 +299,7 @@ function Hud.start()
 	vitals()
 	objective()
 	team()
+	swarmWarning()
 end
 
 function Hud.gui(): ScreenGui

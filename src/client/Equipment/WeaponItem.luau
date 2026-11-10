@@ -26,7 +26,14 @@ local Loadout = require(script.Parent.Loadout)
 
 local player = Players.LocalPlayer
 
-local HOLD = CFrame.new(0.95, -1.15, -1.9)
+-- Where each weapon sits in first person; big guns hang lower and further out so they frame the view.
+local HOLDS: { [string]: CFrame } = {
+	RotaryCannon = CFrame.new(1.35, -1.75, -2.4),
+	ArcMortar = CFrame.new(1.2, -1.6, -2.1),
+	FlameProjector = CFrame.new(1.15, -1.5, -2.0),
+	BurstCarbine = CFrame.new(1.0, -1.3, -1.9),
+}
+local DEFAULT_HOLD = CFrame.new(0.95, -1.2, -1.8)
 local STREAM_TICK = 0.1
 -- After firing, ignore server ammo updates briefly so in-flight shots do not make the count jump back.
 local PREDICTION_GRACE = 0.35
@@ -306,7 +313,7 @@ return function(weaponId: WeaponsConfig.WeaponId): Loadout.Item
 			local accent = if Classes.isClassId(classId)
 				then Classes.INFO[classId :: Classes.ClassId].color
 				else Color3.new(1, 1, 1)
-			Viewmodel.hold(Items.build(weaponId, accent), CFrame.identity, HOLD)
+			Viewmodel.hold(Items.build(weaponId, accent), CFrame.identity, HOLDS[weaponId] or DEFAULT_HOLD)
 			Viewmodel.play(function(alpha)
 				local rise = 1 - alpha
 				return CFrame.new(0, -0.8 * rise, 0) * CFrame.Angles(math.rad(-30) * rise, 0, 0)

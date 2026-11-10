@@ -21,6 +21,7 @@ local WeaponItem = require(Client.Equipment.WeaponItem)
 local Classes = require(ReplicatedStorage.Shared.Config.Classes)
 local Kits = require(ReplicatedStorage.Shared.Config.Kits)
 local Hud = require(Client.UI.Hud)
+local EnemyAnimator = require(Client.EnemyAnimator)
 
 -- The game draws its own HUD; the default backpack and health bar would duplicate it.
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
@@ -33,6 +34,7 @@ Movement.start()
 Headlamp.start()
 Viewmodel.start()
 Hud.start()
+EnemyAnimator.start()
 
 local localPlayer = Players.LocalPlayer
 
@@ -60,6 +62,14 @@ Net.unreliable("WeaponShots").OnClientEvent
 		Effects.muzzleFlash(muzzle, ((ends[1] or origin + Vector3.zAxis) - muzzle).Unit)
 	end)
 Net.unreliable("Projectile").OnClientEvent:Connect(Effects.projectile)
+Net.unreliable("Burrow").OnClientEvent:Connect(Effects.burrow)
+Net.unreliable("EnemyDied").OnClientEvent:Connect(Effects.enemyDeath)
+Net.unreliable("EnemyAttack").OnClientEvent:Connect(function(model: Model, kind: string)
+	local head = model:FindFirstChild("Head") or model:FindFirstChild("Mouth") or model.PrimaryPart
+	if head and head:IsA("BasePart") and kind ~= "Charge" then
+		Effects.impact(head.Position + head.CFrame.LookVector * 1.5, head.CFrame.LookVector, "Flesh")
+	end
+end)
 Net.unreliable("ProjectileEnd").OnClientEvent:Connect(Effects.endProjectile)
 Net.unreliable("Explosion").OnClientEvent:Connect(function(position: Vector3, radius: number, style: string)
 	Effects.explosion(position, radius, style)

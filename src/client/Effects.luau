@@ -209,10 +209,53 @@ function Effects.flame(position: Vector3, direction: Vector3, range: number)
 	TweenService:Create(light, TweenInfo.new(0.3), { Brightness = 0 }):Play()
 end
 
+-- Earth bursting where a Vrill digs in or out.
+function Effects.burrow(position: Vector3)
+	local holder = anchor(position, Vector3.yAxis, 2.5)
+	local dirt = Instance.new("ParticleEmitter")
+	dirt.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	dirt.Color = ColorSequence.new(Color3.fromRGB(70, 56, 84))
+	dirt.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.2), NumberSequenceKeypoint.new(1, 1) })
+	dirt.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 1.5), NumberSequenceKeypoint.new(1, 4) })
+	dirt.Lifetime = NumberRange.new(0.8, 1.4)
+	dirt.Speed = NumberRange.new(6, 14)
+	dirt.SpreadAngle = Vector2.new(40, 40)
+	dirt.EmissionDirection = Enum.NormalId.Front
+	dirt.Acceleration = Vector3.new(0, -20, 0)
+	dirt.Rate = 0
+	dirt.Parent = holder
+	dirt:Emit(16)
+	Effects.impact(position, Vector3.yAxis, "Rock")
+end
+
+-- Bioluminescent splatter when a Vrill dies.
+function Effects.enemyDeath(position: Vector3, size: number)
+	local holder = anchor(position, Vector3.yAxis, 2)
+	local goo = Instance.new("ParticleEmitter")
+	goo.Texture = "rbxasset://textures/particles/sparkles_main.dds"
+	goo.Color = ColorSequence.new(Color3.fromRGB(140, 255, 90))
+	goo.LightEmission = 0.8
+	goo.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.5 * size), NumberSequenceKeypoint.new(1, 0) })
+	goo.Lifetime = NumberRange.new(0.4, 0.9)
+	goo.Speed = NumberRange.new(8, 18)
+	goo.SpreadAngle = Vector2.new(180, 180)
+	goo.Acceleration = Vector3.new(0, -50, 0)
+	goo.Rate = 0
+	goo.Parent = holder
+	goo:Emit(math.floor(10 + size * 4))
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(140, 255, 90)
+	light.Range = 6 + size * 2
+	light.Brightness = 2
+	light.Parent = holder
+	TweenService:Create(light, TweenInfo.new(0.5), { Brightness = 0 }):Play()
+end
+
 local projectiles: { [number]: { part: Part, velocity: Vector3, gravity: number, age: number } } = {}
 local PROJECTILE_COLORS: { [string]: Color3 } = {
 	Mortar = Color3.fromRGB(255, 170, 70),
 	Grenade = Color3.fromRGB(255, 200, 120),
+	Acid = Color3.fromRGB(140, 255, 90),
 }
 
 -- Draws a server projectile locally along the same ballistic arc.

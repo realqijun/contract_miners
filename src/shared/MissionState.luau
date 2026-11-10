@@ -19,6 +19,8 @@ MissionState.KEYS = {
 	Target = "Target",
 	-- Team Ferrin pool, spent on resupply pods.
 	Ferrin = "Ferrin",
+	-- Server time the latest swarm was called, for the warning banner.
+	Swarm = "Swarm",
 }
 
 local function holder(): Instance

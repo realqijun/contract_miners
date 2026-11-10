@@ -29,6 +29,12 @@ local REMOTES: { [string]: Kind } = {
 	ProjectileEnd = "Unreliable",
 	-- Server announces an explosion: (position: Vector3, radius: number, style: string).
 	Explosion = "Unreliable",
+	-- A Vrill bursts out of or dives into the ground here: (position: Vector3).
+	Burrow = "Unreliable",
+	-- A Vrill attacks, for animation and sound: (model: Model, kind: "Melee" | "Spit" | "Charge").
+	EnemyAttack = "Unreliable",
+	-- A Vrill died here: (position: Vector3, size: number).
+	EnemyDied = "Unreliable",
 }
 
 local CLASS_FOR_KIND: { [Kind]: string } = {
