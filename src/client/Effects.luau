@@ -103,6 +103,24 @@ function Effects.tracer(from: Vector3, to: Vector3, color: Color3?)
 	Debris:AddItem(part, 0.1)
 end
 
+-- A taut line from `from` to `to` that fades out (grapple shots, cutter beams seen from afar).
+function Effects.rope(from: Vector3, to: Vector3, color: Color3?, duration: number?)
+	local length = (to - from).Magnitude
+	local part = Instance.new("Part")
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	part.Material = Enum.Material.Neon
+	part.Color = color or Color3.fromRGB(230, 220, 200)
+	part.Size = Vector3.new(0.12, 0.12, length)
+	part.CFrame = CFrame.lookAt((from + to) / 2, to)
+	part.Parent = folder()
+	TweenService:Create(part, TweenInfo.new(duration or 0.5), { Transparency = 1 }):Play()
+	Debris:AddItem(part, (duration or 0.5) + 0.05)
+end
+
 -- A brief flash and light at a muzzle.
 function Effects.muzzleFlash(position: Vector3, direction: Vector3, color: Color3?)
 	local holder = anchor(position, direction, 0.08)
@@ -256,6 +274,9 @@ local PROJECTILE_COLORS: { [string]: Color3 } = {
 	Mortar = Color3.fromRGB(255, 170, 70),
 	Grenade = Color3.fromRGB(255, 200, 120),
 	Acid = Color3.fromRGB(140, 255, 90),
+	Lumen = Color3.fromRGB(210, 235, 255),
+	Flare = Color3.fromRGB(255, 120, 60),
+	Satchel = Color3.fromRGB(122, 196, 72),
 }
 
 -- Draws a server projectile locally along the same ballistic arc.

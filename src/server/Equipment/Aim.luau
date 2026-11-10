@@ -34,7 +34,7 @@ function Aim.validate(player: Player, origin: unknown, direction: unknown): Ray?
 	return { origin = o, direction = d.Unit }
 end
 
--- Everything aimed rays pass through: every crew member and anything marked as an effect.
+-- Everything aimed rays pass through: every crew member, effects, and the crew's own domes.
 function Aim.ignoreList(): { Instance }
 	local ignore: { Instance } = {}
 	for _, other in Players:GetPlayers() do
@@ -42,9 +42,11 @@ function Aim.ignoreList(): { Instance }
 			table.insert(ignore, other.Character)
 		end
 	end
-	local effects = Workspace:FindFirstChild("Effects")
-	if effects then
-		table.insert(ignore, effects)
+	for _, name in { "Effects", "Shields" } do
+		local folder = Workspace:FindFirstChild(name)
+		if folder then
+			table.insert(ignore, folder)
+		end
 	end
 	return ignore
 end

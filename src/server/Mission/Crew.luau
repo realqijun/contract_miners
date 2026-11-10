@@ -1,6 +1,7 @@
 --!strict
 -- Spawning crew members into the mission with their class gear, vitals and ammo.
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 
 local Server = script.Parent.Parent
@@ -8,6 +9,7 @@ local Surface = require(Server.Cave.Surface)
 local Gear = require(Server.Character.Gear)
 local Vitals = require(Server.Character.Vitals)
 local Weapons = require(Server.Equipment.Weapons)
+local Tools = require(Server.Equipment.Tools)
 local Runtime = require(script.Parent.Runtime)
 
 local Crew = {}
@@ -35,9 +37,12 @@ function Crew.spawn(player: Player, at: CFrame)
 	if not player:HasAppearanceLoaded() then
 		player.CharacterAppearanceLoaded:Wait()
 	end
+	-- Only satchel charges damage the crew; this tag is how they find us.
+	CollectionService:AddTag(character, "Crew")
 	Gear.equip(character, classId)
 	Vitals.track(player, character)
 	Weapons.arm(player)
+	Tools.arm(player)
 end
 
 -- A spot near `center` on the floor, facing it, for the `index`th person arriving there.

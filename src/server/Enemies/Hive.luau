@@ -16,6 +16,7 @@ local Net = require(Shared.Net)
 local Server = script.Parent.Parent
 local Damage = require(Server.Combat.Damage)
 local Projectiles = require(Server.Combat.Projectiles)
+local Shields = require(Server.Combat.Shields)
 local Surface = require(Server.Cave.Surface)
 local Vitals = require(Server.Character.Vitals)
 local Vrill = require(Server.Models.Vrill)
@@ -194,7 +195,9 @@ local function onDamage(target: Instance, info: Damage.Info)
 end
 
 local function meleeAttack(enemy: Enemy, player: Player)
-	Vitals.damage(player, enemy.stats.damage)
+	local root = rootOf(player)
+	local multiplier = if root then Shields.meleeMultiplier(root.Position) else 1
+	Vitals.damage(player, enemy.stats.damage * multiplier)
 	Net.unreliable("EnemyAttack"):FireAllClients(enemy.model, "Melee")
 end
 

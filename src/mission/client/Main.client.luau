@@ -18,6 +18,10 @@ local Effects = require(Client.Effects)
 local Loadout = require(Client.Equipment.Loadout)
 local PickaxeItem = require(Client.Equipment.PickaxeItem)
 local WeaponItem = require(Client.Equipment.WeaponItem)
+local ToolItem = require(Client.Equipment.ToolItem)
+local Throwables = require(Client.Equipment.Throwables)
+local CableRider = require(Client.Character.CableRider)
+local Reveal = require(Client.Reveal)
 local Classes = require(ReplicatedStorage.Shared.Config.Classes)
 local Kits = require(ReplicatedStorage.Shared.Config.Kits)
 local Hud = require(Client.UI.Hud)
@@ -70,6 +74,16 @@ Net.unreliable("WeaponShots").OnClientEvent
 	end)
 Net.unreliable("Projectile").OnClientEvent:Connect(Effects.projectile)
 Net.unreliable("Burrow").OnClientEvent:Connect(Effects.burrow)
+Net.unreliable("ToolEffect").OnClientEvent:Connect(function(user: Player, kind: string, from: Vector3, to: Vector3)
+	if user == localPlayer then
+		return
+	end
+	if kind == "Grapple" then
+		Effects.rope(from, to)
+	elseif kind == "Cutter" then
+		Effects.rope(from, to, Color3.fromRGB(255, 130, 70), 0.12)
+	end
+end)
 Net.unreliable("EnemyDied").OnClientEvent:Connect(Effects.enemyDeath)
 Net.unreliable("EnemyAttack").OnClientEvent:Connect(function(model: Model, kind: string)
 	local head = model:FindFirstChild("Head") or model:FindFirstChild("Mouth") or model.PrimaryPart
@@ -94,6 +108,11 @@ local kit = Kits.BY_CLASS[if Classes.isClassId(classId) then classId :: Classes.
 Loadout.start({
 	Primary = WeaponItem(kit.primary),
 	Secondary = WeaponItem(kit.secondary),
+	Traversal = ToolItem(kit.traversal),
+	Support = ToolItem(kit.support),
 	Pickaxe = PickaxeItem(),
 })
 Downed.start()
+Throwables.start()
+CableRider.start()
+task.spawn(Reveal.start)

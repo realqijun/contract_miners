@@ -26,6 +26,12 @@ local itemFor: { [string]: (Classes.ClassId) -> Items.ItemId? } = {
 	Secondary = function(classId)
 		return Kits.BY_CLASS[classId].secondary
 	end,
+	Traversal = function(classId)
+		return Kits.BY_CLASS[classId].traversal
+	end,
+	Support = function(classId)
+		return Kits.BY_CLASS[classId].support
+	end,
 }
 
 -- Where the right hand is held, relative to the upper torso: out front, palm-down axis forward.
@@ -87,11 +93,6 @@ function Held.show(player: Player, slot: string)
 	weld.Parent = grip
 	model.Parent = character
 	raiseArm(character, true)
-end
-
--- Registers which item model a slot shows for each class.
-function Held.define(slot: string, pick: (Classes.ClassId) -> Items.ItemId?)
-	itemFor[slot] = pick
 end
 
 function Held.start()

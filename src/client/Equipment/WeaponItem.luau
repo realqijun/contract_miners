@@ -71,9 +71,11 @@ local function aimParams(): RaycastParams
 			table.insert(ignore, other.Character)
 		end
 	end
-	local effects = Workspace:FindFirstChild("Effects")
-	if effects then
-		table.insert(ignore, effects)
+	for _, name in { "Effects", "Shields" } do
+		local folder = Workspace:FindFirstChild(name)
+		if folder then
+			table.insert(ignore, folder)
+		end
 	end
 	params.FilterDescendantsInstances = ignore
 	return params

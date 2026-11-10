@@ -39,6 +39,12 @@ local REMOTES: { [string]: Kind } = {
 	Ping = "Event",
 	-- Server shows a ping to everyone: (pinger: Player, position: Vector3, label: string).
 	PingShown = "Event",
+	-- Client uses its traversal or support tool: (toolId: string, action: string, origin: Vector3, direction: Vector3).
+	ToolUse = "Event",
+	-- Client throws a grenade or flare: (kind: "Grenade" | "Flare", origin: Vector3, direction: Vector3).
+	Throw = "Event",
+	-- Server shows a grapple line or a cutter beam: (player: Player, kind: string, from: Vector3, to: Vector3).
+	ToolEffect = "Unreliable",
 }
 
 local CLASS_FOR_KIND: { [Kind]: string } = {
