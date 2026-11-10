@@ -3,6 +3,8 @@
 
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Resources = require(ReplicatedStorage.Shared.Config.Resources)
@@ -75,5 +77,184 @@ function Effects.impact(position: Vector3, normal: Vector3, surface: string)
 	dust.Parent = holder
 	dust:Emit(4)
 end
+
+-- A bright streak from the muzzle to the impact that fades quickly.
+function Effects.tracer(from: Vector3, to: Vector3, color: Color3?)
+	local length = (to - from).Magnitude
+	if length < 0.5 then
+		return
+	end
+	local part = Instance.new("Part")
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.CastShadow = false
+	part.Material = Enum.Material.Neon
+	part.Color = color or Color3.fromRGB(255, 220, 150)
+	part.Size = Vector3.new(0.08, 0.08, length)
+	part.CFrame = CFrame.lookAt((from + to) / 2, to)
+	part.Parent = folder()
+	TweenService:Create(
+		part,
+		TweenInfo.new(0.08, Enum.EasingStyle.Linear),
+		{ Transparency = 1, Size = Vector3.new(0.02, 0.02, length) }
+	):Play()
+	Debris:AddItem(part, 0.1)
+end
+
+-- A brief flash and light at a muzzle.
+function Effects.muzzleFlash(position: Vector3, direction: Vector3, color: Color3?)
+	local holder = anchor(position, direction, 0.08)
+	local light = Instance.new("PointLight")
+	light.Color = color or Color3.fromRGB(255, 200, 120)
+	light.Range = 12
+	light.Brightness = 3
+	light.Shadows = false
+	light.Parent = holder
+	local flash = Instance.new("Part")
+	flash.Anchored = true
+	flash.CanCollide = false
+	flash.CanQuery = false
+	flash.CanTouch = false
+	flash.CastShadow = false
+	flash.Material = Enum.Material.Neon
+	flash.Color = color or Color3.fromRGB(255, 210, 140)
+	flash.Shape = Enum.PartType.Ball
+	flash.Size = Vector3.new(0.5, 0.5, 0.5)
+	flash.CFrame = CFrame.new(position)
+	flash.Parent = folder()
+	Debris:AddItem(flash, 0.05)
+end
+
+local EXPLOSION_COLORS: { [string]: Color3 } = {
+	Blast = Color3.fromRGB(255, 150, 60),
+	Mortar = Color3.fromRGB(255, 170, 70),
+	Cryo = Color3.fromRGB(150, 220, 255),
+	Seismic = Color3.fromRGB(210, 170, 120),
+	Satchel = Color3.fromRGB(255, 120, 50),
+	Decoy = Color3.fromRGB(255, 200, 80),
+}
+
+-- Fireball, flash and smoke sized to the blast radius.
+function Effects.explosion(position: Vector3, radius: number, style: string)
+	local color = EXPLOSION_COLORS[style] or EXPLOSION_COLORS.Blast
+	local ball = Instance.new("Part")
+	ball.Anchored = true
+	ball.CanCollide = false
+	ball.CanQuery = false
+	ball.CanTouch = false
+	ball.CastShadow = false
+	ball.Shape = Enum.PartType.Ball
+	ball.Material = Enum.Material.Neon
+	ball.Color = color
+	ball.Size = Vector3.one * radius * 0.4
+	ball.CFrame = CFrame.new(position)
+	ball.Parent = folder()
+	TweenService:Create(ball, TweenInfo.new(0.35, Enum.EasingStyle.Quad, Enum.EasingDirection.Out), {
+		Size = Vector3.one * radius * 2,
+		Transparency = 1,
+	}):Play()
+	Debris:AddItem(ball, 0.4)
+
+	local holder = anchor(position, Vector3.yAxis, 3)
+	local light = Instance.new("PointLight")
+	light.Color = color
+	light.Range = radius * 4
+	light.Brightness = 5
+	light.Parent = holder
+	TweenService:Create(light, TweenInfo.new(0.6), { Brightness = 0 }):Play()
+
+	local smoke = Instance.new("ParticleEmitter")
+	smoke.Texture = "rbxasset://textures/particles/smoke_main.dds"
+	smoke.Color = ColorSequence.new(Color3.fromRGB(70, 60, 80))
+	smoke.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.3), NumberSequenceKeypoint.new(1, 1) })
+	smoke.Size =
+		NumberSequence.new({ NumberSequenceKeypoint.new(0, radius * 0.4), NumberSequenceKeypoint.new(1, radius * 1.2) })
+	smoke.Lifetime = NumberRange.new(1, 1.8)
+	smoke.Speed = NumberRange.new(radius * 0.6, radius * 1.4)
+	smoke.SpreadAngle = Vector2.new(180, 180)
+	smoke.Rate = 0
+	smoke.Parent = holder
+	smoke:Emit(14)
+	Effects.impact(position, Vector3.yAxis, "Rock")
+end
+
+-- One tick of a flame stream: a burst of fire particles carried out to the stream's range.
+function Effects.flame(position: Vector3, direction: Vector3, range: number)
+	local holder = anchor(position, direction, 1.2)
+	local fire = Instance.new("ParticleEmitter")
+	fire.Texture = "rbxasset://textures/particles/fire_main.dds"
+	fire.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, Color3.fromRGB(120, 190, 255)),
+		ColorSequenceKeypoint.new(0.15, Color3.fromRGB(255, 200, 90)),
+		ColorSequenceKeypoint.new(1, Color3.fromRGB(255, 70, 30)),
+	})
+	fire.LightEmission = 1
+	fire.Size = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.4), NumberSequenceKeypoint.new(1, 3.2) })
+	fire.Transparency = NumberSequence.new({ NumberSequenceKeypoint.new(0, 0.1), NumberSequenceKeypoint.new(1, 1) })
+	fire.Lifetime = NumberRange.new(0.35, 0.5)
+	fire.Speed = NumberRange.new(range * 1.8, range * 2.4)
+	fire.SpreadAngle = Vector2.new(9, 9)
+	fire.EmissionDirection = Enum.NormalId.Front
+	fire.Rate = 0
+	fire.Parent = holder
+	fire:Emit(10)
+	local light = Instance.new("PointLight")
+	light.Color = Color3.fromRGB(255, 150, 60)
+	light.Range = 16
+	light.Brightness = 2
+	light.Shadows = false
+	light.Parent = holder
+	TweenService:Create(light, TweenInfo.new(0.3), { Brightness = 0 }):Play()
+end
+
+local projectiles: { [number]: { part: Part, velocity: Vector3, gravity: number, age: number } } = {}
+local PROJECTILE_COLORS: { [string]: Color3 } = {
+	Mortar = Color3.fromRGB(255, 170, 70),
+	Grenade = Color3.fromRGB(255, 200, 120),
+}
+
+-- Draws a server projectile locally along the same ballistic arc.
+function Effects.projectile(id: number, origin: Vector3, velocity: Vector3, gravity: number, style: string)
+	local part = Instance.new("Part")
+	part.Anchored = true
+	part.CanCollide = false
+	part.CanQuery = false
+	part.CanTouch = false
+	part.Shape = Enum.PartType.Ball
+	part.Material = Enum.Material.Neon
+	part.Color = PROJECTILE_COLORS[style] or PROJECTILE_COLORS.Grenade
+	part.Size = Vector3.new(0.6, 0.6, 0.6)
+	part.CFrame = CFrame.new(origin)
+	part.Parent = folder()
+	local light = Instance.new("PointLight")
+	light.Color = part.Color
+	light.Range = 10
+	light.Brightness = 1.5
+	light.Parent = part
+	projectiles[id] = { part = part, velocity = velocity, gravity = gravity, age = 0 }
+end
+
+function Effects.endProjectile(id: number)
+	local projectile = projectiles[id]
+	if projectile then
+		projectile.part:Destroy()
+		projectiles[id] = nil
+	end
+end
+
+RunService.Heartbeat:Connect(function(dt)
+	for id, projectile in projectiles do
+		projectile.age += dt
+		local velocity = projectile.velocity - Vector3.yAxis * projectile.gravity * dt
+		projectile.part.Position += (projectile.velocity + velocity) * 0.5 * dt
+		projectile.velocity = velocity
+		-- The end broadcast is unreliable; never leave a projectile flying forever.
+		if projectile.age > 8 then
+			Effects.endProjectile(id)
+		end
+	end
+end)
 
 return Effects

@@ -17,6 +17,18 @@ local REMOTES: { [string]: Kind } = {
 	Impact = "Unreliable",
 	-- Client tells the server which equipment slot it holds: (slot: string).
 	EquipSlot = "Event",
+	-- Client fires a weapon: (weaponId: string, origin: Vector3, shots: { { direction: Vector3, part: BasePart?, position: Vector3? } }).
+	WeaponFire = "Event",
+	-- Client starts a reload: (weaponId: string).
+	WeaponReload = "Event",
+	-- Server relays shots to other clients for tracers: (shooter: Player, weaponId: string, origin: Vector3, ends: { Vector3 }).
+	WeaponShots = "Unreliable",
+	-- Server announces a projectile: (id: number, origin: Vector3, velocity: Vector3, gravity: number, style: string).
+	Projectile = "Unreliable",
+	-- Server ends a projectile: (id: number, position: Vector3).
+	ProjectileEnd = "Unreliable",
+	-- Server announces an explosion: (position: Vector3, radius: number, style: string).
+	Explosion = "Unreliable",
 }
 
 local CLASS_FOR_KIND: { [Kind]: string } = {

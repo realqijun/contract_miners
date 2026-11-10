@@ -4,10 +4,12 @@
 -- Used for both the first-person viewmodel and the item other players see in hand.
 
 local Build = require(script.Parent.Parent.Build)
+local Guns = require(script.Parent.Guns)
 
 local Items = {}
 
-export type ItemId = "Pickaxe"
+-- "Pickaxe", or any weapon or tool id.
+export type ItemId = string
 
 local STEEL = Color3.fromRGB(150, 150, 160)
 local DARK = Color3.fromRGB(44, 42, 52)
@@ -94,12 +96,16 @@ local function pickaxe(accent: Color3): Model
 	return model
 end
 
-local BUILDERS: { [ItemId]: (accent: Color3) -> Model } = {
-	Pickaxe = pickaxe,
-}
-
 function Items.build(id: ItemId, accent: Color3): Model
-	return BUILDERS[id](accent)
+	if id == "Pickaxe" then
+		return pickaxe(accent)
+	end
+	local builder = Guns.BUILDERS[id]
+	assert(builder, `No model for item "{id}"`)
+	local model = Build.model(id)
+	builder(model, accent)
+	weldAll(model, model:FindFirstChild("Grip") :: BasePart)
+	return model
 end
 
 return Items

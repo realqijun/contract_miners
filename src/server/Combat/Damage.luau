@@ -17,6 +17,17 @@ export type Info = {
 	position: Vector3?,
 	-- The exact part hit, for weakspot and armour checks.
 	part: BasePart?,
+	-- Multiplier when `part` is a weakspot.
+	weakspotMultiplier: number?,
+	-- Ignores armour plates.
+	piercesArmor: boolean?,
+	-- Status effects: fraction of speed removed per hit, burn added (damage per second), freeze seconds, stun seconds.
+	slow: number?,
+	burn: number?,
+	freeze: number?,
+	stun: number?,
+	-- Hits crew members too (satchel charges only).
+	friendlyFire: boolean?,
 }
 
 type Handler = (target: Instance, info: Info) -> ()

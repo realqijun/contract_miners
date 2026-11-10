@@ -25,6 +25,8 @@ local Vitals = require(Server.Character.Vitals)
 local Deposits = require(Server.Mission.Deposits)
 local Held = require(Server.Equipment.Held)
 local Pickaxe = require(Server.Equipment.Pickaxe)
+local Weapons = require(Server.Equipment.Weapons)
+local Projectiles = require(Server.Combat.Projectiles)
 local Runtime = require(Server.Mission.Runtime)
 
 local KEYS = MissionState.KEYS
@@ -80,6 +82,8 @@ Deposits.populate()
 Vitals.start()
 Held.start()
 Pickaxe.start()
+Weapons.start()
+Projectiles.start()
 
 -- Spawn points in a ring around the Dropcan, dropped onto the floor.
 local function spawnPoint(index: number): CFrame
@@ -110,6 +114,7 @@ local function spawnCharacter(player: Player)
 		end
 		Gear.equip(character, classId)
 		Vitals.track(player, character)
+		Weapons.arm(player)
 	end
 end
 

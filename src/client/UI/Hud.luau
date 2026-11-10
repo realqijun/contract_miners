@@ -14,11 +14,13 @@ local Resources = require(Shared.Config.Resources)
 local Theme = require(script.Parent.Theme)
 
 local Hud = {}
+Hud._hitToken = nil :: {}?
 
 local KEYS = MissionState.KEYS
 local player = Players.LocalPlayer
 
 local gui: ScreenGui
+local crosshairTicks: { Frame } = {}
 
 local function crosshair()
 	local holder = Instance.new("Frame")
@@ -41,6 +43,7 @@ local function crosshair()
 		stroke.Color = Color3.new(0, 0, 0)
 		stroke.Transparency = 0.6
 		stroke.Parent = line
+		table.insert(crosshairTicks, line)
 	end
 	tick(UDim2.fromScale(0.5, 0.5), UDim2.fromOffset(3, 3))
 	tick(UDim2.new(0.5, 0, 0, 2), UDim2.fromOffset(2, 6))
@@ -259,6 +262,23 @@ end
 
 function Hud.gui(): ScreenGui
 	return gui
+end
+
+-- Flashes the crosshair to confirm a hit; weakspot hits flash brighter and longer.
+function Hud.hitMarker(weakspot: boolean)
+	local color = if weakspot then Theme.ACCENT else Theme.WARNING
+	for _, line in crosshairTicks do
+		line.BackgroundColor3 = color
+	end
+	local token = {}
+	Hud._hitToken = token
+	task.delay(if weakspot then 0.16 else 0.09, function()
+		if Hud._hitToken == token then
+			for _, line in crosshairTicks do
+				line.BackgroundColor3 = Theme.TEXT
+			end
+		end
+	end)
 end
 
 return Hud

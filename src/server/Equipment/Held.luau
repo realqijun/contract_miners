@@ -7,6 +7,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage.Shared
 local Classes = require(Shared.Config.Classes)
+local Kits = require(Shared.Config.Kits)
 local Items = require(Shared.Models.Items)
 local Net = require(Shared.Net)
 
@@ -18,6 +19,12 @@ local SLOTS = { Primary = true, Secondary = true, Traversal = true, Support = tr
 local itemFor: { [string]: (Classes.ClassId) -> Items.ItemId? } = {
 	Pickaxe = function()
 		return "Pickaxe"
+	end,
+	Primary = function(classId)
+		return Kits.BY_CLASS[classId].primary
+	end,
+	Secondary = function(classId)
+		return Kits.BY_CLASS[classId].secondary
 	end,
 }
 
