@@ -345,7 +345,8 @@ function Weapons.start()
 	RunService.Heartbeat:Connect(function(dt)
 		for player, byWeapon in states do
 			for weaponId, state in byWeapon do
-				if state.heat > 0 then
+				-- Spin weapons only cool once the trigger is released.
+				if state.heat > 0 and os.clock() - state.lastRefill > 0.25 then
 					local stats = WeaponsConfig.STATS[weaponId :: WeaponsConfig.WeaponId]
 					local before = math.floor(state.heat * 20)
 					state.heat = math.max(0, state.heat - (stats.coolPerSecond or 0.5) * dt)

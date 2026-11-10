@@ -717,7 +717,8 @@ function Tools.start()
 					publish(player, "Flares", state.charges.Flares)
 				end
 			end
-			if state.heat > 0 then
+			-- The cutter only cools while it is not cutting.
+			if state.heat > 0 and os.clock() - (state.lastUse.PlasmaCutter or 0) > 0.3 then
 				local before = math.floor(state.heat * 20)
 				state.heat = math.max(0, state.heat - ToolsConfig.TOOLS.PlasmaCutter.coolPerSecond * dt)
 				if math.floor(state.heat * 20) ~= before then
