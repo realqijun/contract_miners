@@ -34,6 +34,8 @@ local Crew = require(Server.Mission.Crew)
 local Flow = require(Server.Mission.Flow)
 local Revive = require(Server.Mission.Revive)
 local Pings = require(Server.Mission.Pings)
+local PlayerData = require(Server.Data.PlayerData)
+local Progress = require(Shared.Progress)
 local Objectives = require(Server.Mission.Objectives)
 local Resupply = require(Server.Mission.Resupply)
 
@@ -41,6 +43,7 @@ local KEYS = MissionState.KEYS
 
 Players.CharacterAutoLoads = false
 Net.createAll()
+PlayerData.start()
 MissionState.set(KEYS.Phase, "Loading")
 
 -- Studio playtests have no hub teleport, so they launch a solo Mining run with a random seed.
@@ -99,6 +102,20 @@ Revive.start()
 Pings.start()
 Objectives.start()
 Resupply.onRefill(Tools.refill)
+-- Bank every crew member's rewards the moment the mission ends.
+Flow.onEnded(function(outcome, rewards)
+	for player, reward in rewards do
+		local classId = launch.classes[tostring(player.UserId)]
+		if classId then
+			PlayerData.update(player, function(data)
+				Progress.grant(data, classId, reward.credits, reward.xp)
+				data.stats.missions += 1
+				data.stats.successes += if outcome == "Success" then 1 else 0
+				data.stats.volticite += player:GetAttribute("Delivered") or 0
+			end)
+		end
+	end
+end)
 
 Flow.begin()
 Players.PlayerAdded:Connect(Crew.land)

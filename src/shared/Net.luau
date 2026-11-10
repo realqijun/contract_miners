@@ -45,6 +45,12 @@ local REMOTES: { [string]: Kind } = {
 	Throw = "Event",
 	-- Server shows a grapple line or a cutter beam: (player: Player, kind: string, from: Vector3, to: Vector3).
 	ToolEffect = "Unreliable",
+	-- Progression requests from the hub terminals; each returns (ok: boolean, reason: string?).
+	BuyUpgrade = "Function",
+	EquipUpgrade = "Function",
+	SelectClass = "Function",
+	-- Client saves its settings: (settings: { [string]: any }).
+	SaveSettings = "Event",
 }
 
 local CLASS_FOR_KIND: { [Kind]: string } = {

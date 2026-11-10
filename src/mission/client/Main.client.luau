@@ -30,6 +30,7 @@ local Downed = require(Client.Character.Downed)
 local Results = require(Client.UI.Results)
 local Markers = require(Client.UI.Markers)
 local Ping = require(Client.Ping)
+local Settings = require(Client.Settings)
 
 -- The game draws its own HUD; the default backpack and health bar would duplicate it.
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
@@ -37,6 +38,9 @@ StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Health, false)
 -- The View button is the ping key, not the UI selection toggle.
 GuiService.AutoSelectGuiEnabled = false
 
+Settings.bindToProfile(Players.LocalPlayer, function(values)
+	Net.event("SaveSettings"):FireServer(values)
+end)
 CameraController.start()
 Movement.start()
 Headlamp.start()

@@ -3,8 +3,12 @@
 
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local Progress = require(ReplicatedStorage.Shared.Progress)
 
 local Server = script.Parent.Parent
+local PlayerData = require(Server.Data.PlayerData)
 local Surface = require(Server.Cave.Surface)
 local Gear = require(Server.Character.Gear)
 local Vitals = require(Server.Character.Vitals)
@@ -24,7 +28,13 @@ end
 -- Loads a fresh character standing at `at`, dressed and armed for the player's class.
 function Crew.spawn(player: Player, at: CFrame)
 	local classId = Runtime.get().launch.classes[tostring(player.UserId)]
+	local data = PlayerData.await(player)
+	if not data then
+		return
+	end
 	player:SetAttribute("Class", classId)
+	-- Equipment stats on both sides read the equipped upgrades from this attribute.
+	player:SetAttribute("Upgrades", table.concat(Progress.equippedList(data, classId), ","))
 	player:SetAttribute("Dead", false)
 	player.CharacterAdded:Once(function(character)
 		character:PivotTo(at)

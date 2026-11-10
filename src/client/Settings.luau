@@ -43,6 +43,37 @@ function Settings.apply(changes: { [string]: any })
 	end
 end
 
+-- Loads saved settings from the profile snapshot once, and saves later changes back (debounced).
+function Settings.bindToProfile(player: Player, save: (Values) -> ())
+	local loaded = false
+	local function load()
+		local raw = player:GetAttribute("Progress")
+		if loaded or type(raw) ~= "string" then
+			return
+		end
+		loaded = true
+		local ok, data = pcall(function()
+			return game:GetService("HttpService"):JSONDecode(raw)
+		end)
+		if ok and type(data) == "table" and type(data.settings) == "table" then
+			Settings.apply(data.settings)
+		end
+	end
+	player:GetAttributeChangedSignal("Progress"):Connect(load)
+	load()
+	local pending = false
+	table.insert(listeners, function()
+		if not loaded or pending then
+			return
+		end
+		pending = true
+		task.delay(1, function()
+			pending = false
+			save(values)
+		end)
+	end)
+end
+
 -- Calls `callback` now and on every change.
 function Settings.observe(callback: (Values) -> ())
 	table.insert(listeners, callback)
