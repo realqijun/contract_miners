@@ -120,7 +120,8 @@ Classes cannot be switched during a mission.
 - Players have 100 health and a 30-point shield.
 - The shield regenerates after 5 seconds without taking damage.
 - Health is restored only by red health crystals and resupply pods.
-- Falls higher than 25 studs deal fall damage.
+- Falls higher than 25 studs deal fall damage, 3.2 per stud beyond that, measured by the server from the top of the fall.
+- A grapple pull or a cable ride restarts the fall from where it lets go.
 - Friendly fire is off, except for Satchel Charges.
 
 ### 6.1 Downed, revive and failure
@@ -138,6 +139,7 @@ Missions contain only these resources:
 
 - **Volticite** is the mission objective, held in each player's backpack with unlimited capacity.
 - **Ferrin** goes into a team pool, and every 80 Ferrin calls one resupply pod that refills ammo and health.
+- Holding the ping key calls a resupply pod to the pinged spot when the pool can pay for it.
 - **Red health crystals** are scattered through the cave and heal on mining.
 
 There are no secondary objectives, no other minerals and no carriable artifacts.
@@ -278,9 +280,11 @@ Enemy counts, enemy health and the Volticite target scale with the number of pla
 
 - The hub is a small walkable ship deck in a public server holding up to 16 players.
 - It has three terminals: Class Select (which also shows each tool's description), Upgrades and Mission Board.
-- It has a controls board and a terminal to replay the walkthrough.
+- It has a controls board, a Settings terminal and a terminal to replay the walkthrough.
 - Parties of up to 4 form by standing on a Dropcan launch pad.
-- The first player on the pad picks the mission at the Mission Board, and a 10 second countdown teleports everyone on the pad into one reserved mission server.
+- The first player on the pad leads it and picks the mission at the Mission Board, and a 10 second countdown teleports everyone on the pad into one reserved mission server.
+- A banner tells each player on a pad whether they lead it, are waiting for the leader, or how long is left before launch.
+- If the leader steps off, the next player aboard leads and any countdown is cancelled.
 - Friends join each other through Roblox's normal join flow into the hub.
 
 ### 13.1 Mission Board
@@ -297,6 +301,10 @@ Enemy counts, enemy health and the Volticite target scale with the number of pla
 - It takes about 5 minutes and pays no rewards.
 - It can be replayed any time from the hub.
 - There are no other tutorials or contextual hints.
+- The cave has four caverns: a landing cavern for mining, a cavern with a ledge about 9 studs high that every class climbs with its traversal tool, an upper cavern for Ferrin, the resupply pod and a 5 Vrill practice swarm, and a far cavern where the Lift Pod lands.
+- It runs 13 steps, each waiting on something the server sees for itself; only the camera switch is reported by the client.
+- A card at the top of the screen shows the current step with the player's own key or gamepad bindings.
+- A downed player gets back up after 5 seconds instead of failing the run.
 
 ## 15. UI
 
@@ -307,14 +315,16 @@ Enemy counts, enemy health and the Volticite target scale with the number of pla
 - The settings menu contains mouse sensitivity, gamepad sensitivity, invert Y, field of view, master, music and SFX volume, and gamepad aim assist strength.
 - Gamepad aim assist slows aim near enemies.
 - Settings save per player.
+- The menu key opens the settings menu in the hub and in missions, and closes any open menu.
 
 ## 16. Audio
 
 - An ambient cave soundscape plays throughout: drips, distant rumbles and hive chittering.
 - A combat music track fades in during swarms and out after.
 - Distinct stingers play for swarm incoming, objective complete, Lift Pod inbound and launch countdown.
-- All audio comes from Roblox's licensed audio library.
+- All audio comes from Roblox's licensed audio library: APM Music for music and stingers, Pro Sound Effects for effects, and sounds built into the Roblox client.
 - Music and SFX go through separate volume groups.
+- `src/shared/Config/Audio.luau` lists every sound with its volume, pitch, repeat gap and reach.
 
 ## 17. Architecture
 
@@ -330,6 +340,9 @@ Enemy counts, enemy health and the Volticite target scale with the number of pla
 - The server validates every hit for fire rate, ammo, range, line of sight and lag-compensated target position.
 - Only the server applies damage, mining, terrain edits and rewards.
 - Enemies are simulated on the server and replicated to clients.
+- The server samples every crew member's position 30 times a second for fall damage and a speed check.
+- Horizontal travel spends a budget that refills at 1.2 times sprint speed and banks up to 2.5 seconds, so late positions after a lag spike pass while speed hacks and teleports are put back.
+- Grapple pulls and cable rides are recognised from what the server knows (when a grapple fired, where cables run), never from client reports.
 
 ### 17.3 Performance budget
 
@@ -365,15 +378,38 @@ The owner installs:
 - The agent verifies gameplay end-to-end by playtesting in Studio through the MCP, including multi-client tests for co-op.
 - Bug fixes start with an end-to-end reproduction that fails before the fix.
 
+### 19.1 Studio test hooks
+
+These Workspace attributes only work in Studio.
+
+| Attribute | Place | Effect |
+|---|---|---|
+| `DevMissionType` | Mission | `Mining` or `Refinery` for the Studio launch |
+| `DevSeed` | Mission | Fixed cave seed |
+| `DevClass` | Mission | Class for the Studio launch |
+| `DevWalkthrough` | Mission | Runs the walkthrough |
+| `DevWalkthroughStep` | Mission | Starts the walkthrough at a step, moving the player there |
+| `DevSwarm` | Mission | Set to a size to call a swarm |
+| `DevGodMode` | Mission | The crew takes no damage |
+| `DevPumpSeconds` | Mission | Shortens Refinery pumping |
+| `DevCredits` | Hub | Grants credits to every player |
+| `DevXp` | Hub | Grants XP to every player's selected class |
+
+The player attribute `DebugLookAt`, set to a world point, turns the mission camera to face it.
+
 ## 20. Publishing
 
 Teleports and DataStores only work in a published experience.
+Launching from a pad and returning to the hub show a notice instead of teleporting until both place ids are set.
+
 The owner:
 
-1. Creates the experience on Roblox.
-2. Adds a second place for Missions.
-3. Enables Studio API access for DataStores.
-4. Completes the experience questionnaire, where cartoon violence against aliens should land at a low maturity rating.
-5. Publishes when ready.
-
-The agent provides an exact checklist at the right moment and wires the place IDs into config.
+1. Opens the hub place (`ContractMiners.rbxl`) with Rojo connected on port 34872 and chooses File, Publish to Roblox, creating a new experience named Contract Miners.
+   This makes the hub the start place.
+2. Opens the mission place (`ContractMinersMission.rbxl`) with Rojo connected on port 34873 and chooses File, Publish to Roblox As, picks the Contract Miners experience and adds it as a new place named Mission.
+3. Copies both place ids from the Creator Dashboard (Places list) and sends them to the agent, which sets `HUB` and `MISSION` in `src/shared/Config/Places.luau` and republishes both places.
+4. In Game Settings, Security, turns on Enable Studio Access to API Services, so saves also work in Studio.
+5. In Game Settings, Avatar, sets the avatar type to R15.
+6. Completes the Maturity and Compliance questionnaire in the Creator Dashboard, where cartoon violence against aliens should land at a low maturity rating.
+7. Clears the Studio test attributes (section 19.1) in both places before the final publish; they are ignored outside Studio but should not ship set.
+8. Makes the experience public when ready.
