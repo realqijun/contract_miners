@@ -33,6 +33,12 @@ MissionState.KEYS = {
 	LiftLandsAt = "LiftLandsAt",
 	LiftLaunchAt = "LiftLaunchAt",
 	Aboard = "Aboard",
+	-- Refinery: stage ("Site", "Dropping", "Pipes", "Pumping", "Launching", "Done"), wells hooked up,
+	-- pumping progress 0..1 and how many pipe spans are broken.
+	RefineryStage = "RefineryStage",
+	WellsConnected = "WellsConnected",
+	PumpProgress = "PumpProgress",
+	PipesBroken = "PipesBroken",
 }
 
 local function holder(): Instance

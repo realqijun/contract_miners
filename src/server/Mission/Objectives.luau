@@ -6,6 +6,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local MissionState = require(ReplicatedStorage.Shared.MissionState)
 
 local Extraction = require(script.Parent.Extraction)
+local RefineryMission = require(script.Parent.RefineryMission)
 local Runtime = require(script.Parent.Runtime)
 
 local Objectives = {}
@@ -20,6 +21,8 @@ function Objectives.start()
 				Extraction.call()
 			end
 		end)
+	else
+		RefineryMission.start()
 	end
 end
 

@@ -6,6 +6,7 @@
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 
 local PlayerConfig = require(ReplicatedStorage.Shared.Config.Player)
 
@@ -61,6 +62,10 @@ end
 function Vitals.damage(player: Player, amount: number)
 	local state = states[player]
 	if not state or amount <= 0 or not Vitals.isAlive(player) then
+		return
+	end
+	-- Studio-only test hook: automated playtests can make the crew invulnerable.
+	if RunService:IsStudio() and Workspace:GetAttribute("DevGodMode") == true then
 		return
 	end
 	state.lastDamaged = os.clock()

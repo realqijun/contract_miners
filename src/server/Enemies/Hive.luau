@@ -57,6 +57,8 @@ export type Enemy = {
 	burrowing: boolean,
 	lastAttacker: Player?,
 	hover: AlignPosition?,
+	-- Prefers smashing structures (pipes) to chasing the crew.
+	structureHunter: boolean,
 }
 
 local folder: Folder
@@ -65,6 +67,11 @@ local alive = 0
 local healthScale = 1
 local decoy: { position: Vector3, untilTime: number }? = nil
 local deathListeners: { (Enemy) -> () } = {}
+-- Structures melee Vrill go after when closer than the crew (Refinery pipes).
+local structureTargets: (() -> { BasePart })? = nil
+local STRUCTURE_INTEREST = 30
+-- Share of melee Vrill that go after structures rather than the crew.
+local STRUCTURE_HUNTER_CHANCE = 0.35
 
 local function aliveCrew(): { Player }
 	local list = {}
@@ -422,6 +429,28 @@ local function think(enemy: Enemy, now: number, dt: number)
 	end
 
 	local reach = enemy.stats.attackRange + enemy.stats.size * 0.5
+	if structureTargets and enemy.structureHunter and enemy.type ~= "Ravager" then
+		local nearest, nearestDistance = nil, math.min(STRUCTURE_INTEREST, distance)
+		for _, part in structureTargets() do
+			local gap = (part.Position - position).Magnitude - part.Size.Z * 0.5
+			if gap < nearestDistance then
+				nearest, nearestDistance = part, gap
+			end
+		end
+		if nearest then
+			if nearestDistance <= reach then
+				enemy.humanoid:Move(Vector3.zero)
+				if now >= enemy.nextAttack then
+					enemy.nextAttack = now + enemy.stats.attackCooldown
+					Damage.apply(nearest, { amount = enemy.stats.damage, kind = "Melee", position = position })
+					Net.unreliable("EnemyAttack"):FireAllClients(enemy.model, "Melee")
+				end
+			else
+				walkTowards(enemy, nearest.Position, now)
+			end
+			return
+		end
+	end
 	if goal == targetRoot.Position and distance <= reach then
 		enemy.humanoid:MoveTo(goal)
 		if now >= enemy.nextAttack then
@@ -510,6 +539,7 @@ function Hive.spawn(enemyType: EnemiesConfig.EnemyType, position: Vector3, optio
 		burrowing = false,
 		lastAttacker = nil,
 		hover = nil,
+		structureHunter = Random.new():NextNumber() < STRUCTURE_HUNTER_CHANCE,
 	}
 	alive += 1
 	enemies[model] = enemy
@@ -552,6 +582,10 @@ end
 -- Pulls nearby Vrill to a point until `untilTime` (os.clock()).
 function Hive.setDecoy(position: Vector3, untilTime: number)
 	decoy = { position = position, untilTime = untilTime }
+end
+
+function Hive.setStructureTargets(provider: (() -> { BasePart })?)
+	structureTargets = provider
 end
 
 function Hive.onDeath(callback: (Enemy) -> ())

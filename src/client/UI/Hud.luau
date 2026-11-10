@@ -138,6 +138,7 @@ local function objective()
 			return
 		end
 		title.Text = string.upper(Missions.DISPLAY_NAME[missionType]) .. " MISSION"
+		carrying.TextColor3 = Theme.TEXT_DIM
 		local phase = MissionState.get(KEYS.Phase)
 		if phase == "Extraction" then
 			local now = Workspace:GetServerTimeNow()
@@ -152,6 +153,33 @@ local function objective()
 			else
 				goal.Text = `Lift Pod landing in {math.max(0, math.ceil(landsAt - now))}`
 				carrying.Text = "Follow the Lift Pod marker"
+				progress.set(1)
+			end
+		elseif missionType == "Refinery" then
+			title.TextColor3 = Theme.ACCENT
+			local stage = MissionState.get(KEYS.RefineryStage)
+			local laying = player:GetAttribute("LayingPipe")
+			if stage == "Site" or stage == "Dropping" then
+				goal.Text = if stage == "Site" then "Call down the Refinery at its site" else "Refinery inbound"
+				carrying.Text = "Follow the Refinery site marker"
+				progress.set(0)
+			elseif stage == "Pipes" then
+				local connected = MissionState.get(KEYS.WellsConnected) or 0
+				goal.Text = `Connect the wells  {connected} / {Missions.REFINERY_WELLS}`
+				carrying.Text = if laying
+					then `Laying pipe from well {laying}: walk it back to the Refinery`
+					else "Start a pipeline at a well"
+				progress.set(connected / Missions.REFINERY_WELLS)
+			elseif stage == "Pumping" then
+				local broken = MissionState.get(KEYS.PipesBroken) or 0
+				local pumped = MissionState.get(KEYS.PumpProgress) or 0
+				goal.Text = string.format("Pumping slurry  %d%%", math.floor(pumped * 100))
+				carrying.Text = if broken > 0 then `Repair broken pipes ({broken})` else "Defend the pipelines"
+				carrying.TextColor3 = if broken > 0 then Theme.WARNING else Theme.TEXT_DIM
+				progress.set(pumped)
+			else
+				goal.Text = "Rocket launch"
+				carrying.Text = ""
 				progress.set(1)
 			end
 		elseif missionType == "Mining" then
@@ -174,7 +202,19 @@ local function objective()
 			)
 	end
 	for _, key in
-		{ KEYS.MissionType, KEYS.Deposited, KEYS.Target, KEYS.Ferrin, KEYS.Phase, KEYS.Aboard, KEYS.LiftLaunchAt }
+		{
+			KEYS.MissionType,
+			KEYS.Deposited,
+			KEYS.Target,
+			KEYS.Ferrin,
+			KEYS.Phase,
+			KEYS.Aboard,
+			KEYS.LiftLaunchAt,
+			KEYS.RefineryStage,
+			KEYS.WellsConnected,
+			KEYS.PumpProgress,
+			KEYS.PipesBroken,
+		}
 	do
 		MissionState.observe(key, update)
 	end
@@ -188,6 +228,7 @@ local function objective()
 		end
 	end)
 	player:GetAttributeChangedSignal("Volticite"):Connect(update)
+	player:GetAttributeChangedSignal("LayingPipe"):Connect(update)
 end
 
 local function teamRow(list: Frame, member: Player): Frame
