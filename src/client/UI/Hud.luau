@@ -138,7 +138,24 @@ local function objective()
 			return
 		end
 		title.Text = string.upper(Missions.DISPLAY_NAME[missionType]) .. " MISSION"
-		if missionType == "Mining" then
+		local phase = MissionState.get(KEYS.Phase)
+		if phase == "Extraction" then
+			local now = Workspace:GetServerTimeNow()
+			local landsAt = MissionState.get(KEYS.LiftLandsAt) or 0
+			local launchAt = MissionState.get(KEYS.LiftLaunchAt)
+			title.TextColor3 = Theme.WARNING
+			if launchAt then
+				local remaining = math.max(0, math.ceil(launchAt - now))
+				goal.Text = string.format("Board the Lift Pod  %d:%02d", remaining // 60, remaining % 60)
+				carrying.Text = `{MissionState.get(KEYS.Aboard) or 0} / {#Players:GetPlayers()} aboard`
+				progress.set(remaining / Missions.LIFT_POD_COUNTDOWN)
+			else
+				goal.Text = `Lift Pod landing in {math.max(0, math.ceil(landsAt - now))}`
+				carrying.Text = "Follow the Lift Pod marker"
+				progress.set(1)
+			end
+		elseif missionType == "Mining" then
+			title.TextColor3 = Theme.ACCENT
 			local deposited = MissionState.get(KEYS.Deposited) or 0
 			local target = MissionState.get(KEYS.Target) or 0
 			goal.Text = `Deposit Volticite  {deposited} / {target}`
@@ -156,9 +173,20 @@ local function objective()
 					else ""
 			)
 	end
-	for _, key in { KEYS.MissionType, KEYS.Deposited, KEYS.Target, KEYS.Ferrin } do
+	for _, key in
+		{ KEYS.MissionType, KEYS.Deposited, KEYS.Target, KEYS.Ferrin, KEYS.Phase, KEYS.Aboard, KEYS.LiftLaunchAt }
+	do
 		MissionState.observe(key, update)
 	end
+	-- Countdowns tick once a second while extraction is under way.
+	task.spawn(function()
+		while true do
+			task.wait(1)
+			if MissionState.get(KEYS.Phase) == "Extraction" then
+				update()
+			end
+		end
+	end)
 	player:GetAttributeChangedSignal("Volticite"):Connect(update)
 end
 

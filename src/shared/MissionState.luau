@@ -29,6 +29,10 @@ MissionState.KEYS = {
 	OutcomeReason = "OutcomeReason",
 	-- Server time the crew returns to the hub.
 	ReturnAt = "ReturnAt",
+	-- Extraction: when the Lift Pod lands and when it launches, and how many are aboard.
+	LiftLandsAt = "LiftLandsAt",
+	LiftLaunchAt = "LiftLaunchAt",
+	Aboard = "Aboard",
 }
 
 local function holder(): Instance
