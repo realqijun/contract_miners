@@ -6,12 +6,12 @@ local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
 local CaveConfig = require(Shared.Config.Cave)
 local Missions = require(Shared.Config.Missions)
+local Glide = require(Shared.Glide)
 local MissionState = require(Shared.MissionState)
 
 local Server = script.Parent.Parent
@@ -110,14 +110,13 @@ local function countdown(model: Model, deck: BasePart)
 				Flow.fail("Nobody made it onto the Lift Pod")
 			end
 			-- Lift off with whoever is aboard.
-			local driver = Instance.new("CFrameValue")
-			driver.Value = model:GetPivot()
-			driver.Changed:Connect(function(value)
-				model:PivotTo(value)
-			end)
-			TweenService:Create(driver, TweenInfo.new(6, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-				Value = model:GetPivot() + Vector3.yAxis * DROP_HEIGHT,
-			}):Play()
+			Glide.move(
+				model,
+				model:GetPivot() + Vector3.yAxis * DROP_HEIGHT,
+				6,
+				Enum.EasingStyle.Quad,
+				Enum.EasingDirection.In
+			)
 		end
 	end)
 end
@@ -160,22 +159,10 @@ function Extraction.call(at: Vector3?)
 	model:SetAttribute("MarkerColor", Color3.fromRGB(120, 255, 150))
 	model.Parent = Workspace
 	CollectionService:AddTag(model, "Marker")
-	local driver = Instance.new("CFrameValue")
-	driver.Value = model:GetPivot()
-	driver.Changed:Connect(function(value)
-		model:PivotTo(value)
-	end)
-	local tween = TweenService:Create(
-		driver,
-		TweenInfo.new(DESCENT_SECONDS, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ Value = landed }
-	)
-	tween.Completed:Once(function()
-		driver:Destroy()
+	Glide.move(model, landed, DESCENT_SECONDS, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, function()
 		Explosions.detonate({ position = site + Vector3.yAxis, radius = 9, damage = 600, style = "Blast" })
 		countdown(model, deck)
 	end)
-	tween:Play()
 end
 
 return Extraction

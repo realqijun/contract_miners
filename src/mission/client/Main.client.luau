@@ -7,6 +7,7 @@ local StarterGui = game:GetService("StarterGui")
 
 local Players = game:GetService("Players")
 
+local Glide = require(ReplicatedStorage.Shared.Glide)
 local Net = require(ReplicatedStorage.Shared.Net)
 
 local Client = ReplicatedStorage.Client
@@ -50,6 +51,7 @@ Settings.bindToProfile(Players.LocalPlayer, function(values)
 end)
 Audio.start()
 Soundtrack.start()
+Glide.start()
 CameraController.start()
 Movement.start()
 Headlamp.start()

@@ -6,10 +6,10 @@
 local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
+local Glide = require(Shared.Glide)
 local MissionState = require(Shared.MissionState)
 local Resources = require(Shared.Config.Resources)
 
@@ -128,25 +128,13 @@ function Resupply.call(position: Vector3): boolean
 	end
 	model:SetAttribute("Remaining", #Players:GetPlayers())
 	model.Parent = Workspace
-	local driver = Instance.new("CFrameValue")
-	driver.Value = model:GetPivot()
-	driver.Changed:Connect(function(value)
-		model:PivotTo(value)
-	end)
-	local tween = TweenService:Create(
-		driver,
-		TweenInfo.new(DROP_SECONDS, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
-		{ Value = landed }
-	)
-	tween.Completed:Once(function()
-		driver:Destroy()
+	Glide.move(model, landed, DROP_SECONDS, Enum.EasingStyle.Quad, Enum.EasingDirection.In, function()
 		Explosions.detonate({ position = floor + Vector3.yAxis, radius = 6, damage = 400, style = "Blast" })
 		setupPrompts(model, body)
 		model:SetAttribute("MarkerLabel", "Resupply")
 		model:SetAttribute("MarkerColor", Color3.fromRGB(120, 255, 170))
 		CollectionService:AddTag(model, "Marker")
 	end)
-	tween:Play()
 	return true
 end
 

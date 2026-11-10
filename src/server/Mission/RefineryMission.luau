@@ -6,12 +6,12 @@ local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
-local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
 local Layout = require(Shared.Cave.Layout)
 local Missions = require(Shared.Config.Missions)
+local Glide = require(Shared.Glide)
 local MissionState = require(Shared.MissionState)
 
 local Server = script.Parent.Parent
@@ -245,21 +245,12 @@ local function launch()
 	-- Blast a hole straight up so the rocket has somewhere to go.
 	local top = rocket:GetPivot().Position
 	Digging.capsule(top, top + Vector3.yAxis * 200, 5)
-	local driver = Instance.new("CFrameValue")
-	driver.Value = rocket:GetPivot()
-	driver.Changed:Connect(function(value)
-		rocket:PivotTo(value)
-	end)
-	local tween = TweenService:Create(driver, TweenInfo.new(7, Enum.EasingStyle.Quad, Enum.EasingDirection.In), {
-		Value = rocket:GetPivot() + Vector3.yAxis * 220,
-	})
-	tween.Completed:Once(function()
+	local goal = rocket:GetPivot() + Vector3.yAxis * 220
+	Glide.move(rocket, goal, 7, Enum.EasingStyle.Quad, Enum.EasingDirection.In, function()
 		rocket:Destroy()
-		driver:Destroy()
 		setStage("Done")
 		Extraction.call(nil)
 	end)
-	tween:Play()
 end
 
 local function pump()
@@ -309,18 +300,7 @@ local function callRefinery(site: Vector3)
 	built.model:PivotTo(landed + Vector3.yAxis * 80)
 	built.model.Parent = Workspace
 	mark(built.model, "Refinery", Color3.fromRGB(176, 96, 255))
-	local driver = Instance.new("CFrameValue")
-	driver.Value = built.model:GetPivot()
-	driver.Changed:Connect(function(value)
-		built.model:PivotTo(value)
-	end)
-	local tween = TweenService:Create(
-		driver,
-		TweenInfo.new(DROP_SECONDS, Enum.EasingStyle.Quad, Enum.EasingDirection.Out),
-		{ Value = landed }
-	)
-	tween.Completed:Once(function()
-		driver:Destroy()
+	Glide.move(built.model, landed, DROP_SECONDS, Enum.EasingStyle.Quad, Enum.EasingDirection.Out, function()
 		Explosions.detonate({ position = site + Vector3.yAxis, radius = 14, damage = 800, style = "Blast" })
 		-- Pipes are laid relative to where the Refinery actually stands.
 		built.inlet = (built.model:FindFirstChild("Inlet") :: BasePart).Position
@@ -331,7 +311,6 @@ local function callRefinery(site: Vector3)
 		end
 		updateScreen()
 	end)
-	tween:Play()
 end
 
 local function placeWells(layout: Layout.CaveLayout, siteCavern: Layout.Cavern, site: Vector3)
