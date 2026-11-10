@@ -10,7 +10,14 @@ local Net = {}
 
 export type Kind = "Event" | "Unreliable" | "Function"
 
-local REMOTES: { [string]: Kind } = {}
+local REMOTES: { [string]: Kind } = {
+	-- Client asks to swing the pickaxe along its aim: (origin: Vector3, direction: Vector3, heavy: boolean).
+	PickaxeSwing = "Event",
+	-- Server tells clients an impact happened for effects: (position: Vector3, normal: Vector3, surface: string, source: Player?).
+	Impact = "Unreliable",
+	-- Client tells the server which equipment slot it holds: (slot: string).
+	EquipSlot = "Event",
+}
 
 local CLASS_FOR_KIND: { [Kind]: string } = {
 	Event = "RemoteEvent",

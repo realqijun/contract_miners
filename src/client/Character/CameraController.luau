@@ -155,6 +155,18 @@ function CameraController.start()
 	Input.onBegan("CameraToggle", function()
 		CameraController.setMode(if mode == "First" then "Third" else "First")
 	end)
+	-- Studio-only test hook: automated playtests aim by setting this attribute to a world point.
+	if RunService:IsStudio() then
+		player:GetAttributeChangedSignal("DebugLookAt"):Connect(function()
+			local point = player:GetAttribute("DebugLookAt")
+			if typeof(point) == "Vector3" then
+				local direction = (point - camera.CFrame.Position).Unit
+				yaw = math.atan2(-direction.X, -direction.Z)
+				pitch = math.clamp(math.asin(direction.Y), -PITCH_LIMIT, PITCH_LIMIT)
+				player:SetAttribute("DebugLookAt", nil)
+			end
+		end)
+	end
 	player.CharacterAdded:Connect(function(model)
 		-- Start looking the way the character spawned facing.
 		local root = model:WaitForChild("HumanoidRootPart") :: BasePart

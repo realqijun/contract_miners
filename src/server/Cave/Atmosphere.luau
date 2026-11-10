@@ -1,6 +1,7 @@
 --!strict
 -- Lighting and terrain colouring for Kessra's violet crystal caves.
--- Lighting.Technology must be set to Future in the Mission place file itself; scripts cannot change it.
+-- The Mission place file itself sets Lighting.LightingStyle = Realistic and PrioritizeLightingQuality = true
+-- (the old "Future" technology); games cannot change those at runtime.
 
 local Lighting = game:GetService("Lighting")
 local Workspace = game:GetService("Workspace")
@@ -31,7 +32,7 @@ function Atmosphere.apply()
 	-- Caves are lit only by the miners, crystals and fungi; daylight never reaches them.
 	Lighting.ClockTime = 0
 	Lighting.Brightness = 0
-	Lighting.Ambient = Color3.fromRGB(26, 20, 38)
+	Lighting.Ambient = Color3.fromRGB(44, 36, 64)
 	Lighting.OutdoorAmbient = Color3.new(0, 0, 0)
 	Lighting.EnvironmentDiffuseScale = 0
 	Lighting.EnvironmentSpecularScale = 0

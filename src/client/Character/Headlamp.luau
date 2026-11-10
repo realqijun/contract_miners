@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
 local PlayerConfig = require(ReplicatedStorage.Shared.Config.Player)
+local CameraController = require(script.Parent.CameraController)
 
 local Headlamp = {}
 
@@ -35,8 +36,8 @@ function Headlamp.start()
 
 	-- A faint fill so the player's immediate surroundings never go fully black.
 	local fill = Instance.new("PointLight")
-	fill.Range = 12
-	fill.Brightness = 0.35
+	fill.Range = 18
+	fill.Brightness = 0.7
 	fill.Color = PlayerConfig.HEADLAMP_COLOR
 	fill.Shadows = false
 	fill.Parent = holder
@@ -46,8 +47,12 @@ function Headlamp.start()
 		local alive = character ~= nil and (character:FindFirstChildOfClass("Humanoid") :: Humanoid?) ~= nil
 		lamp.Enabled = alive
 		fill.Enabled = alive
-		-- Slightly above and behind the eye so the beam edge is visible on nearby walls.
-		holder.CFrame = Workspace.CurrentCamera.CFrame * CFrame.new(0.4, 0.3, 0.2)
+		-- Just ahead of the face, aimed along the crosshair: any closer and the player's own helmet
+		-- would shadow the beam. In third person the camera is behind the shoulder, so use the head.
+		local view = Workspace.CurrentCamera.CFrame
+		local head = character and character:FindFirstChild("Head") :: BasePart?
+		local eye = if CameraController.getMode() == "Third" and head then head.Position else view.Position
+		holder.CFrame = view.Rotation * CFrame.new(0.3, 0.25, -1.6) + eye
 		if character then
 			local gear = character:FindFirstChild("ClassGear")
 			local lens = gear and gear:FindFirstChild("HeadlampLens")

@@ -17,6 +17,8 @@ MissionState.KEYS = {
 	-- Mining: Volticite deposited and the target.
 	Deposited = "Deposited",
 	Target = "Target",
+	-- Team Ferrin pool, spent on resupply pods.
+	Ferrin = "Ferrin",
 }
 
 local function holder(): Instance
