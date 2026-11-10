@@ -109,9 +109,28 @@ local function shakeOffset(dt: number): CFrame
 	return CFrame.Angles(math.noise(t, 0.3) * strength, math.noise(0.7, t) * strength, 0)
 end
 
+-- With no character of our own (dead), orbit a standing teammate.
+local function spectate()
+	for _, other in Players:GetPlayers() do
+		local root = other ~= player and other.Character and other.Character.PrimaryPart
+		if root and other:GetAttribute("Downed") ~= true then
+			camera.CameraType = Enum.CameraType.Scriptable
+			local rotation = CFrame.Angles(0, yaw, 0) * CFrame.Angles(math.clamp(pitch, -0.8, 0.4), 0, 0)
+			camera.CFrame = CFrame.new(root.Position + Vector3.yAxis * 2) * rotation * CFrame.new(0, 2, 14)
+			return
+		end
+	end
+end
+
 local function update(dt: number)
 	local model, root, humanoid = character()
 	if not (model and root and humanoid) then
+		if enabled then
+			UserInputService.MouseBehavior = Enum.MouseBehavior.LockCenter
+			UserInputService.MouseIconEnabled = false
+			gamepadLook(dt)
+		end
+		spectate()
 		return
 	end
 	camera.CameraType = Enum.CameraType.Scriptable

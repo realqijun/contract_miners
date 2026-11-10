@@ -12,6 +12,8 @@ export type World = {
 	launch: LaunchData.LaunchData,
 	layout: Layout.CaveLayout,
 	dropcan: Dropcan.Dropcan,
+	-- Floor point the Dropcan stands on.
+	landing: Vector3,
 }
 
 local Runtime = {}

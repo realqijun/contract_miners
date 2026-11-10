@@ -61,6 +61,9 @@ function Movement.start()
 			speed = PlayerConfig.SPRINT_SPEED
 		end
 		local slow = player:GetAttribute("SpeedMultiplier")
+		if player:GetAttribute("Downed") == true then
+			speed = 0
+		end
 		target.WalkSpeed = speed * (if type(slow) == "number" then slow else 1)
 		target.UseJumpPower = true
 		target.JumpPower = if crouching then 0 else PlayerConfig.JUMP_POWER

@@ -20,7 +20,6 @@ local Atmosphere = require(Server.Cave.Atmosphere)
 local Carver = require(Server.Cave.Carver)
 local Surface = require(Server.Cave.Surface)
 local Dropcan = require(Server.Models.Dropcan)
-local Gear = require(Server.Character.Gear)
 local Vitals = require(Server.Character.Vitals)
 local Deposits = require(Server.Mission.Deposits)
 local Held = require(Server.Equipment.Held)
@@ -30,6 +29,9 @@ local Projectiles = require(Server.Combat.Projectiles)
 local Hive = require(Server.Enemies.Hive)
 local Spawner = require(Server.Enemies.Spawner)
 local Runtime = require(Server.Mission.Runtime)
+local Crew = require(Server.Mission.Crew)
+local Flow = require(Server.Mission.Flow)
+local Revive = require(Server.Mission.Revive)
 
 local KEYS = MissionState.KEYS
 
@@ -78,7 +80,7 @@ local startCavern = layout.caverns[layout.startCavern]
 local landing = Surface.floorBelow(Surface.cavernOrigin(startCavern), startCavern.radii.Y * 2)
 	or Vector3.new(startCavern.center.X, startCavern.floorY, startCavern.center.Z)
 local dropcan = Dropcan.build(Workspace, CFrame.new(landing))
-Runtime.init({ launch = launch, layout = layout, dropcan = dropcan })
+Runtime.init({ launch = launch, layout = layout, dropcan = dropcan, landing = landing })
 Deposits.populate()
 
 Vitals.start()
@@ -88,43 +90,10 @@ Weapons.start()
 Projectiles.start()
 Hive.start()
 Spawner.start()
+Revive.start()
 
--- Spawn points in a ring around the Dropcan, dropped onto the floor.
-local function spawnPoint(index: number): CFrame
-	local angle = math.rad(-90 + (index - 1) * 50)
-	local around = landing + Vector3.new(math.cos(angle), 0, math.sin(angle)) * 11 + Vector3.yAxis * 6
-	local floor = Surface.floorBelow(around, 20) or landing
-	return CFrame.lookAt(floor + Vector3.yAxis * 3, Vector3.new(landing.X, floor.Y + 3, landing.Z))
-end
-
-local spawnIndex = 0
-local function spawnCharacter(player: Player)
-	local classId = launch.classes[tostring(player.UserId)]
-	if not classId then
-		player:Kick("You are not part of this mission's crew.")
-		return
-	end
-	player:SetAttribute("Class", classId)
-	spawnIndex += 1
-	local spawnAt = spawnPoint(spawnIndex)
-	player.CharacterAdded:Once(function(character)
-		character:PivotTo(spawnAt)
-	end)
-	player:LoadCharacter()
-	local character = player.Character
-	if character then
-		if not player:HasAppearanceLoaded() then
-			player.CharacterAppearanceLoaded:Wait()
-		end
-		Gear.equip(character, classId)
-		Vitals.track(player, character)
-		Weapons.arm(player)
-	end
-end
-
-MissionState.set(KEYS.Phase, "Active")
-
-Players.PlayerAdded:Connect(spawnCharacter)
+Flow.begin()
+Players.PlayerAdded:Connect(Crew.land)
 for _, player in Players:GetPlayers() do
-	task.spawn(spawnCharacter, player)
+	task.spawn(Crew.land, player)
 end

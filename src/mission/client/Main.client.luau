@@ -22,6 +22,8 @@ local Classes = require(ReplicatedStorage.Shared.Config.Classes)
 local Kits = require(ReplicatedStorage.Shared.Config.Kits)
 local Hud = require(Client.UI.Hud)
 local EnemyAnimator = require(Client.EnemyAnimator)
+local Downed = require(Client.Character.Downed)
+local Results = require(Client.UI.Results)
 
 -- The game draws its own HUD; the default backpack and health bar would duplicate it.
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
@@ -35,6 +37,7 @@ Headlamp.start()
 Viewmodel.start()
 Hud.start()
 EnemyAnimator.start()
+Results.start()
 
 local localPlayer = Players.LocalPlayer
 
@@ -89,3 +92,4 @@ Loadout.start({
 	Secondary = WeaponItem(kit.secondary),
 	Pickaxe = PickaxeItem(),
 })
+Downed.start()

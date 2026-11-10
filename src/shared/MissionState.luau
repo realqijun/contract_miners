@@ -21,6 +21,14 @@ MissionState.KEYS = {
 	Ferrin = "Ferrin",
 	-- Server time the latest swarm was called, for the warning banner.
 	Swarm = "Swarm",
+	-- Server time the mission went active, and when it ended.
+	StartedAt = "StartedAt",
+	EndedAt = "EndedAt",
+	-- "Success" or "Failure" once ended, with a short reason.
+	Outcome = "Outcome",
+	OutcomeReason = "OutcomeReason",
+	-- Server time the crew returns to the hub.
+	ReturnAt = "ReturnAt",
 }
 
 local function holder(): Instance
