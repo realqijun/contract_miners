@@ -136,7 +136,7 @@ function RefineryModels.refinery(base: CFrame): Refinery
 		size = Vector3.new(2.6, 1.6, 0.1),
 		cframe = console.CFrame * CFrame.new(0, 0.5, -0.65),
 		color = Color3.fromRGB(12, 10, 18),
-		material = Enum.Material.Glass,
+		-- Not Glass: that material can hide the screen's own SurfaceGui.
 	})
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Front

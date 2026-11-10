@@ -43,6 +43,7 @@ function Theme.label(parent: Instance, props: { [string]: any }): TextLabel
 	label.TextColor3 = Theme.TEXT
 	label.TextSize = 16
 	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.Text = ""
 	for key, value in props do
 		(label :: any)[key] = value
 	end

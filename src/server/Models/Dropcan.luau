@@ -193,7 +193,7 @@ function Dropcan.build(parent: Instance, base: CFrame): Dropcan
 		size = Vector3.new(0.2, 2.2, 3.6),
 		cframe = base * CFrame.new(5.08, 10.2, 0),
 		color = Color3.fromRGB(12, 10, 18),
-		material = Enum.Material.Glass,
+		-- Not Glass: that material can hide the screen's own SurfaceGui.
 	})
 	local gui = Instance.new("SurfaceGui")
 	gui.Face = Enum.NormalId.Right

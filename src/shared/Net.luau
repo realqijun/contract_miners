@@ -51,6 +51,12 @@ local REMOTES: { [string]: Kind } = {
 	SelectClass = "Function",
 	-- Client saves its settings: (settings: { [string]: any }).
 	SaveSettings = "Event",
+	-- Pad leader picks the mission: (missionType: string, seed: number?) -> (ok: boolean, reason: string?).
+	ChooseMission = "Function",
+	-- Client starts the walkthrough, or declines the first-join offer: (play: boolean).
+	Walkthrough = "Event",
+	-- Server tells a player something brief: (text: string).
+	Notice = "Event",
 }
 
 local CLASS_FOR_KIND: { [Kind]: string } = {

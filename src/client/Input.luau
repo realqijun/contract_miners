@@ -101,6 +101,8 @@ local held: { [Action]: number } = {}
 local began: { [Action]: { (Action) -> () } } = {}
 local ended: { [Action]: { (Action) -> () } } = {}
 local enabled = true
+-- Actions that still fire while gameplay input is disabled, so the menu key can close menus.
+local ALWAYS_ENABLED: { [Action]: boolean } = { Menu = true }
 
 local function bindingOf(input: InputObject): Binding
 	if input.UserInputType == Enum.UserInputType.Keyboard or input.UserInputType.Name:match("^Gamepad") then
@@ -118,10 +120,13 @@ local function dispatch(list: { (Action) -> () }?, action: Action)
 end
 
 UserInputService.InputBegan:Connect(function(input, processed)
-	if processed or not enabled then
+	if processed then
 		return
 	end
 	for _, action in actionsFor[bindingOf(input)] or {} do
+		if not enabled and not ALWAYS_ENABLED[action] then
+			continue
+		end
 		held[action] = (held[action] or 0) + 1
 		if held[action] == 1 then
 			dispatch(began[action], action)

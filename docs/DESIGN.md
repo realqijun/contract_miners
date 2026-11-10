@@ -241,8 +241,19 @@ Enemy counts, enemy health and the Volticite target scale with the number of pla
 
 - Missions award credits and class XP for the class played.
 - Each class has 5 levels.
-- Each level unlocks the next upgrade tier for that class's five items: primary, secondary, traversal tool, support tool and grenade.
+- Levels unlock upgrade tiers for that class's five items: primary, secondary, traversal tool, support tool and grenade.
 - Each item has 3 tiers, and each tier offers a choice of 2 upgrades bought with credits.
+- Tier unlocks by class level, with weapons being the primary and secondary and tools being the traversal tool, support tool and grenade:
+
+| Level | Unlocks |
+|---|---|
+| 1 | Tier 1 for every item |
+| 2 | Tier 2 weapons |
+| 3 | Tier 2 tools |
+| 4 | Tier 3 weapons |
+| 5 | Tier 3 tools |
+
+- Upgrades cost 600, 1200 and 1800 credits for tiers 1, 2 and 3.
 - Bought upgrades can be swapped for free.
 - There are no promotions, no overclocks and no cosmetics.
 - Player data is saved with ProfileStore, the only third-party library in the project.
