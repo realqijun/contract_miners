@@ -3,17 +3,34 @@
 	"tree": {
 		"$className": "DataModel",
 		"ReplicatedStorage": {
-			"Shared": { "$path": "src/shared" },
-			"Client": { "$path": "src/client" }
+			"Shared": {
+				"$path": "src/shared"
+			},
+			"Client": {
+				"$path": "src/client"
+			}
 		},
 		"ServerScriptService": {
-			"Server": { "$path": "src/server" },
-			"Place": { "$path": "src/hub/server" },
-			"Vendor": { "$path": "src/vendor" }
+			"Server": {
+				"$path": "src/server"
+			},
+			"Place": {
+				"$path": "src/hub/server"
+			},
+			"Vendor": {
+				"$path": "src/vendor"
+			}
 		},
 		"StarterPlayer": {
 			"StarterPlayerScripts": {
-				"Place": { "$path": "src/hub/client" }
+				"Place": {
+					"$path": "src/hub/client"
+				}
+			}
+		},
+		"ServerStorage": {
+			"Tests": {
+				"$path": "tests"
 			}
 		}
 	}
