@@ -1,5 +1,5 @@
 --!strict
--- Local visual effects: impact debris, sparks and dust. Effects never affect gameplay.
+-- Local effects: impact debris, sparks and dust, with their sounds. Effects never affect gameplay.
 
 local Debris = game:GetService("Debris")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
@@ -8,6 +8,7 @@ local TweenService = game:GetService("TweenService")
 local Workspace = game:GetService("Workspace")
 
 local Resources = require(ReplicatedStorage.Shared.Config.Resources)
+local Sounds = require(script.Parent.Sounds)
 
 local Effects = {}
 
@@ -47,6 +48,7 @@ end
 
 -- Chips and dust thrown off a struck surface.
 function Effects.impact(position: Vector3, normal: Vector3, surface: string)
+	Sounds.play(if surface == "Flesh" then "FleshImpact" else "RockImpact", position)
 	local color = SURFACE_COLORS[surface] or SURFACE_COLORS.Rock
 	local holder = anchor(position + normal * 0.2, normal, 2)
 
@@ -156,6 +158,9 @@ local EXPLOSION_COLORS: { [string]: Color3 } = {
 
 -- Fireball, flash and smoke sized to the blast radius.
 function Effects.explosion(position: Vector3, radius: number, style: string)
+	if style ~= "Flare" then
+		Sounds.play("Explosion", position, math.clamp(radius / 8, 0.5, 1.3))
+	end
 	local color = EXPLOSION_COLORS[style] or EXPLOSION_COLORS.Blast
 	local ball = Instance.new("Part")
 	ball.Anchored = true
@@ -229,6 +234,7 @@ end
 
 -- Earth bursting where a Vrill digs in or out.
 function Effects.burrow(position: Vector3)
+	Sounds.play("Burrow", position)
 	local holder = anchor(position, Vector3.yAxis, 2.5)
 	local dirt = Instance.new("ParticleEmitter")
 	dirt.Texture = "rbxasset://textures/particles/smoke_main.dds"
@@ -248,6 +254,7 @@ end
 
 -- Bioluminescent splatter when a Vrill dies.
 function Effects.enemyDeath(position: Vector3, size: number)
+	Sounds.play("EnemyDeath", position)
 	local holder = anchor(position, Vector3.yAxis, 2)
 	local goo = Instance.new("ParticleEmitter")
 	goo.Texture = "rbxasset://textures/particles/sparkles_main.dds"

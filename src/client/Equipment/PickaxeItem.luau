@@ -16,6 +16,7 @@ local Client = script.Parent.Parent
 local CameraController = require(Client.Character.CameraController)
 local Viewmodel = require(Client.Character.Viewmodel)
 local Effects = require(Client.Effects)
+local Sounds = require(Client.Sounds)
 local EquipmentHud = require(Client.UI.EquipmentHud)
 local Loadout = require(script.Parent.Loadout)
 
@@ -67,6 +68,7 @@ return function(): Loadout.Item
 		local head = player.Character and player.Character:FindFirstChild("Head") :: BasePart?
 		if result and head and (result.Position - head.Position).Magnitude <= PickaxeConfig.RANGE then
 			Effects.impact(result.Position, result.Normal, "Rock")
+			Sounds.play("PickaxeHit", result.Position)
 			CameraController.shake(0.012, 0.12)
 		end
 	end

@@ -32,6 +32,8 @@ local Coach = require(Client.UI.Coach)
 local Markers = require(Client.UI.Markers)
 local Ping = require(Client.Ping)
 local Settings = require(Client.Settings)
+local Sounds = require(Client.Sounds)
+local Soundtrack = require(Client.Soundtrack)
 local Audio = require(Client.Audio)
 local Input = require(Client.Input)
 local Menu = require(Client.UI.Menu)
@@ -47,6 +49,7 @@ Settings.bindToProfile(Players.LocalPlayer, function(values)
 	Net.event("SaveSettings"):FireServer(values)
 end)
 Audio.start()
+Soundtrack.start()
 CameraController.start()
 Movement.start()
 Headlamp.start()
@@ -91,6 +94,7 @@ Net.unreliable("WeaponShots").OnClientEvent
 		local held = shooter.Character and shooter.Character:FindFirstChild("HeldItem")
 		local marker = held and held:FindFirstChild("Muzzle", true)
 		local muzzle = if marker and marker:IsA("Attachment") then marker.WorldPosition else origin
+		Sounds.play(weaponId, muzzle)
 		if weaponId == "FlameProjector" then
 			Effects.flame(muzzle, ((ends[1] or origin) - origin).Unit, 20)
 			return
@@ -115,6 +119,9 @@ end)
 Net.unreliable("EnemyDied").OnClientEvent:Connect(Effects.enemyDeath)
 Net.unreliable("EnemyAttack").OnClientEvent:Connect(function(model: Model, kind: string)
 	local head = model:FindFirstChild("Head") or model:FindFirstChild("Mouth") or model.PrimaryPart
+	if head and head:IsA("BasePart") then
+		Sounds.play("EnemyAttack", head.Position)
+	end
 	if head and head:IsA("BasePart") and kind ~= "Charge" then
 		Effects.impact(head.Position + head.CFrame.LookVector * 1.5, head.CFrame.LookVector, "Flesh")
 	end

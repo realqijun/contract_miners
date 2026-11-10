@@ -20,6 +20,7 @@ local CameraController = require(Client.Character.CameraController)
 local Movement = require(Client.Character.Movement)
 local Viewmodel = require(Client.Character.Viewmodel)
 local Effects = require(Client.Effects)
+local Sounds = require(Client.Sounds)
 local EquipmentHud = require(Client.UI.EquipmentHud)
 local Hud = require(Client.UI.Hud)
 local Loadout = require(script.Parent.Loadout)
@@ -212,6 +213,7 @@ return function(weaponId: WeaponsConfig.WeaponId): Loadout.Item
 			table.insert(shots, shot)
 		end
 		Effects.muzzleFlash(muzzle, direction)
+		Sounds.play(weaponId, muzzle)
 		Net.event("WeaponFire"):FireServer(weaponId, origin, shots)
 		lastShot = os.clock()
 		lastPredicted = lastShot
@@ -227,7 +229,9 @@ return function(weaponId: WeaponsConfig.WeaponId): Loadout.Item
 	local function lob()
 		local origin, direction = CameraController.aimRay()
 		Net.event("WeaponFire"):FireServer(weaponId, origin, { { direction = direction } })
-		Effects.muzzleFlash(muzzlePosition(origin + direction * 2), direction, Color3.fromRGB(255, 170, 70))
+		local muzzle = muzzlePosition(origin + direction * 2)
+		Effects.muzzleFlash(muzzle, direction, Color3.fromRGB(255, 170, 70))
+		Sounds.play(weaponId, muzzle)
 		lastShot = os.clock()
 		lastPredicted = lastShot
 		mag -= 1
@@ -245,7 +249,9 @@ return function(weaponId: WeaponsConfig.WeaponId): Loadout.Item
 		mag = math.max(0, mag - used)
 		lastShot = os.clock()
 		lastPredicted = lastShot
-		Effects.flame(muzzlePosition(origin + direction * 2), direction, stats.range)
+		local muzzle = muzzlePosition(origin + direction * 2)
+		Effects.flame(muzzle, direction, stats.range)
+		Sounds.play(weaponId, muzzle)
 		refreshHud()
 	end
 

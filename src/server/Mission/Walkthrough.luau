@@ -115,8 +115,8 @@ local function standingAbove(player: Player, floorY: number): boolean
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { character }
-	local reach = root.Size.Y / 2 + humanoid.HipHeight + 1
-	local ground = Workspace:Raycast(root.Position, Vector3.yAxis * -reach, params)
+	local depth = root.Size.Y / 2 + humanoid.HipHeight + 1
+	local ground = Workspace:Raycast(root.Position, Vector3.yAxis * -depth, params)
 	return ground ~= nil and ground.Position.Y >= floorY
 end
 
