@@ -13,6 +13,7 @@ local Classes = require(Shared.Config.Classes)
 local MissionState = require(Shared.MissionState)
 local Theme = require(script.Parent.Theme)
 local Hud = require(script.Parent.Hud)
+local Menu = require(script.Parent.Menu)
 
 local Client = script.Parent.Parent
 local CameraController = require(Client.Character.CameraController)
@@ -23,12 +24,15 @@ local Results = {}
 
 local KEYS = MissionState.KEYS
 local player = Players.LocalPlayer
+local shown = false
 
 local function formatTime(seconds: number): string
 	return string.format("%d:%02d", seconds // 60, math.floor(seconds % 60))
 end
 
 local function show()
+	-- A menu left open would hand input and the camera back when it closed.
+	Menu.close()
 	Loadout.setEnabled(false)
 	Input.setEnabled(false)
 	CameraController.setEnabled(false)
@@ -114,8 +118,11 @@ local function show()
 	end)
 end
 
+function Results.isShown(): boolean
+	return shown
+end
+
 function Results.start()
-	local shown = false
 	MissionState.observe(KEYS.Phase, function(phase)
 		if phase == "Ended" and not shown then
 			shown = true

@@ -16,6 +16,7 @@ local Net = require(Shared.Net)
 local Progress = require(Shared.Progress)
 
 local Client = ReplicatedStorage.Client
+local Audio = require(Client.Audio)
 local Input = require(Client.Input)
 local Settings = require(Client.Settings)
 local ProgressView = require(Client.ProgressView)
@@ -30,6 +31,7 @@ local MissionBoard = require(script.Parent.MissionBoard)
 local player = Players.LocalPlayer
 
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
+Audio.start()
 Settings.bindToProfile(player, function(values)
 	Net.event("SaveSettings"):FireServer(values)
 end)

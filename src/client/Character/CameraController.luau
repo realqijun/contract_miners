@@ -2,6 +2,7 @@
 -- First-person and over-the-shoulder third-person camera with mouse and gamepad look.
 -- The character always faces the camera's yaw so aiming is identical in both modes.
 
+local CollectionService = game:GetService("CollectionService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -22,6 +23,10 @@ local EYE_ABOVE_ROOT = 1.6
 local CROUCH_DROP = 1.6
 local SHOULDER_OFFSET = Vector3.new(2.4, 0.8, 8.5)
 local COLLISION_RADIUS = 0.6
+-- Gamepad aim assist slows look speed while the crosshair is over or near a Vrill.
+local ASSIST_RANGE = 140
+local ASSIST_CONE = math.rad(4)
+local ASSIST_MAX_SLOW = 0.6
 
 local player = Players.LocalPlayer
 local camera = Workspace.CurrentCamera
@@ -80,6 +85,29 @@ UserInputService.InputChanged:Connect(function(input, processed)
 	end
 end)
 
+-- 1 with the crosshair on a Vrill, falling to 0 at the edge of the assist cone around it.
+local function assistPull(): number
+	local origin = camera.CFrame.Position
+	local look = camera.CFrame.LookVector
+	local pull = 0
+	for _, enemy in CollectionService:GetTagged("Enemy") do
+		local body = if enemy:IsA("Model") then enemy.PrimaryPart else nil
+		if body then
+			local offset = body.Position - origin
+			local distance = offset.Magnitude
+			if distance > 1 and distance < ASSIST_RANGE then
+				-- Nearby Vrill fill more of the view, so their cone widens with their size.
+				local cone = ASSIST_CONE + math.atan(body.Size.Magnitude / 2 / distance)
+				local angle = math.acos(math.clamp(look:Dot(offset / distance), -1, 1))
+				if angle < cone then
+					pull = math.max(pull, 1 - angle / cone)
+				end
+			end
+		end
+	end
+	return pull
+end
+
 local function gamepadLook(dt: number)
 	local state = UserInputService:GetGamepadState(Enum.UserInputType.Gamepad1)
 	for _, input in state do
@@ -90,7 +118,8 @@ local function gamepadLook(dt: number)
 				local magnitude = (stick.Magnitude - GAMEPAD_DEADZONE) / (1 - GAMEPAD_DEADZONE)
 				local curved = stick.Unit * magnitude * magnitude
 				local settings = Settings.get()
-				local rate = GAMEPAD_RADIANS_PER_SECOND * settings.gamepadSensitivity * dt
+				local assist = 1 - settings.aimAssist * ASSIST_MAX_SLOW * assistPull()
+				local rate = GAMEPAD_RADIANS_PER_SECOND * settings.gamepadSensitivity * assist * dt
 				yaw -= curved.X * rate
 				pitch += curved.Y * rate * (if settings.invertY then -1 else 1)
 				pitch = math.clamp(pitch, -PITCH_LIMIT, PITCH_LIMIT)

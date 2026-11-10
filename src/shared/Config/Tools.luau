@@ -158,6 +158,10 @@ Tools.GRENADES = {
 } :: { [string]: ToolStats }
 
 Tools.THROW_SPEED = 70
+
+-- Riding cables: how close to a cable a character must be to grab it, and how far below it they hang.
+Tools.CABLE_GRAB_DISTANCE = 4.5
+Tools.CABLE_HANG = 3.2
 Tools.THROW_GRAVITY = 70
 
 Tools.FLARES = {

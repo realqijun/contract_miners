@@ -31,6 +31,10 @@ local Results = require(Client.UI.Results)
 local Markers = require(Client.UI.Markers)
 local Ping = require(Client.Ping)
 local Settings = require(Client.Settings)
+local Audio = require(Client.Audio)
+local Input = require(Client.Input)
+local Menu = require(Client.UI.Menu)
+local SettingsMenu = require(Client.UI.SettingsMenu)
 
 -- The game draws its own HUD; the default backpack and health bar would duplicate it.
 StarterGui:SetCoreGuiEnabled(Enum.CoreGuiType.Backpack, false)
@@ -41,6 +45,7 @@ GuiService.AutoSelectGuiEnabled = false
 Settings.bindToProfile(Players.LocalPlayer, function(values)
 	Net.event("SaveSettings"):FireServer(values)
 end)
+Audio.start()
 CameraController.start()
 Movement.start()
 Headlamp.start()
@@ -52,6 +57,23 @@ Markers.start()
 Ping.start()
 
 local localPlayer = Players.LocalPlayer
+
+-- The menu key opens settings. Menus free the mouse, so the camera stops looking until they close;
+-- once the results screen is up it owns input and the menu stays shut.
+Menu.onClose(function()
+	if not Results.isShown() then
+		CameraController.setEnabled(true)
+	end
+end)
+Input.onBegan("Menu", function()
+	if Results.isShown() then
+		return
+	end
+	Menu.toggle(function()
+		CameraController.setEnabled(false)
+		SettingsMenu.open()
+	end)
+end)
 
 -- Our own impacts and shots are predicted locally; only show other players' from the server.
 Net.unreliable("Impact").OnClientEvent:Connect(function(position, normal, surface, source)

@@ -13,14 +13,14 @@ local Input = require(script.Parent.Parent.Input)
 
 local CableRider = {}
 
-local GRAB_DISTANCE = 4.5
-local HANG = 3.2
+local GRAB_DISTANCE = ToolsConfig.CABLE_GRAB_DISTANCE
+local HANG = ToolsConfig.CABLE_HANG
 
 local player = Players.LocalPlayer
 
 local riding: RBXScriptConnection? = nil
 
-local function stop(root: BasePart?, humanoid: Humanoid?)
+local function stop(humanoid: Humanoid?)
 	if riding then
 		riding:Disconnect()
 		riding = nil
@@ -28,9 +28,6 @@ local function stop(root: BasePart?, humanoid: Humanoid?)
 	if humanoid then
 		humanoid.PlatformStand = false
 		humanoid:ChangeState(Enum.HumanoidStateType.Freefall)
-	end
-	if root then
-		player:SetAttribute("CableReleasedAt", Workspace:GetServerTimeNow())
 	end
 end
 
@@ -74,7 +71,7 @@ local function ride()
 	riding = RunService.Heartbeat:Connect(function(dt)
 		travelled += speed * dt
 		if travelled >= length - 1 or humanoid.Health <= 0 or player:GetAttribute("Downed") == true then
-			stop(root, humanoid)
+			stop(humanoid)
 			return
 		end
 		local point = from + (to - from).Unit * travelled - Vector3.yAxis * HANG
@@ -85,7 +82,7 @@ local function ride()
 	jump = humanoid:GetPropertyChangedSignal("Jump"):Connect(function()
 		if humanoid.Jump and riding then
 			jump:Disconnect()
-			stop(root, humanoid)
+			stop(humanoid)
 		end
 	end)
 end
