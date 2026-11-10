@@ -20,6 +20,7 @@ local Net = require(Shared.Net)
 local Server = ServerScriptService.Server
 local Atmosphere = require(Server.Cave.Atmosphere)
 local Carver = require(Server.Cave.Carver)
+local Dressing = require(Server.Cave.Dressing)
 local Surface = require(Server.Cave.Surface)
 local Dropcan = require(Server.Models.Dropcan)
 local Motion = require(Server.Character.Motion)
@@ -105,6 +106,14 @@ if spots then
 else
 	Deposits.populate()
 end
+-- Decoration keeps clear of the minerals and the landing site.
+local keepClear = { landing }
+for _, mineral in Workspace.Minerals:GetChildren() do
+	if mineral:IsA("Model") then
+		table.insert(keepClear, mineral:GetPivot().Position)
+	end
+end
+Dressing.populate(layout, keepClear)
 
 Vitals.start()
 Motion.start()

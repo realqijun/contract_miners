@@ -5,6 +5,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Workspace = game:GetService("Workspace")
 
 local CaveConfig = require(ReplicatedStorage.Shared.Config.Cave)
+local Dressing = require(script.Parent.Dressing)
 
 local Digging = {}
 
@@ -31,6 +32,7 @@ function Digging.sphere(center: Vector3, radius: number): boolean
 		return false
 	end
 	Workspace.Terrain:FillBall(center, allowed, Enum.Material.Air)
+	Dressing.clear(center, allowed)
 	return true
 end
 
