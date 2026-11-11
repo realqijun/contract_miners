@@ -208,13 +208,15 @@ local function objective()
 				carrying.Text = "Mine Volticite and bring it to the Dropcan"
 			end
 		end
+		-- The crew's whole Ferrin pool, and once it pays for a pod, how to call one.
 		local pool = MissionState.get(KEYS.Ferrin) or 0
-		ferrin.Text = `Ferrin  {pool % Resources.RESUPPLY_COST} / {Resources.RESUPPLY_COST}`
-			.. (
-				if pool >= Resources.RESUPPLY_COST
-					then `   ·   hold {Input.label("Ping")} for resupply ({pool // Resources.RESUPPLY_COST})`
-					else ""
-			)
+		local ready = pool // Resources.RESUPPLY_COST
+		if ready == 0 then
+			ferrin.Text = `Ferrin  {pool} / {Resources.RESUPPLY_COST}`
+		else
+			local pods = if ready == 1 then "Resupply ready" else `{ready} resupplies ready`
+			ferrin.Text = `Ferrin  {pool}   ·   {pods}: hold {Input.label("Ping")}`
+		end
 	end
 	for _, key in
 		{
