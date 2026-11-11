@@ -30,6 +30,9 @@ local KEYS = MissionState.KEYS
 local VOXEL = CaveConfig.VOXEL
 local DESCENT_SECONDS = 10
 local DROP_HEIGHT = 70
+-- Root heights above the deck's centre that are inside the cabin, under its roof.
+local CABIN_HEIGHT = 12
+local LAUNCH_GRACE = 1
 
 local called = false
 
@@ -62,7 +65,9 @@ local function chooseLandingSite(): Vector3
 	return best
 end
 
-local function aboard(deck: BasePart): { [Player]: boolean }
+-- Crew standing in the cabin: over the deck and under the roof. Standing on a Vrill that crowded in
+-- still counts, since the roof is what keeps riders inside.
+local function onDeck(deck: BasePart): { [Player]: boolean }
 	local list = {}
 	for _, player in Players:GetPlayers() do
 		local root = player.Character and player.Character.PrimaryPart
@@ -71,7 +76,7 @@ local function aboard(deck: BasePart): { [Player]: boolean }
 			if
 				Vector2.new(offset.X, offset.Z).Magnitude <= LiftPod.DECK_RADIUS + 0.5
 				and offset.Y > -1
-				and offset.Y < 8
+				and offset.Y < CABIN_HEIGHT
 			then
 				list[player] = true
 			end
@@ -87,16 +92,27 @@ local function countdown(model: Model, deck: BasePart)
 	if not Runtime.get().launch.walkthrough then
 		Spawner.swarm(1.2)
 	end
+	-- When each crew member was last in the cabin. Vrill jostling the crew or a jump can lift a
+	-- rider out of it for a moment, so anyone still up who was aboard within LAUNCH_GRACE counts;
+	-- the HUD shows the same count the launch uses.
+	local lastAboard: { [Player]: number } = {}
 	local connection
 	connection = RunService.Heartbeat:Connect(function()
 		if Flow.isOver() then
 			connection:Disconnect()
 			return
 		end
-		local riders = aboard(deck)
+		local now = os.clock()
+		for player in onDeck(deck) do
+			lastAboard[player] = now
+		end
+		local riders = {}
 		local count = 0
-		for _ in riders do
-			count += 1
+		for player, at in lastAboard do
+			if player.Parent == Players and Vitals.isAlive(player) and now - at <= LAUNCH_GRACE then
+				riders[player] = true
+				count += 1
+			end
 		end
 		if MissionState.get(KEYS.Aboard) ~= count then
 			MissionState.set(KEYS.Aboard, count)
