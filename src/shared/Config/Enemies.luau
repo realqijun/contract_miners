@@ -123,9 +123,10 @@ Enemies.STATS = {
 
 Enemies.MAX_ALIVE = 30
 
--- Indexed by party size at launch.
-Enemies.HEALTH_SCALE = { 0.7, 0.85, 1, 1.15 }
-Enemies.COUNT_SCALE = { 0.55, 0.75, 1, 1.2 }
+-- Indexed by party size at launch. Swarm counts grow in step with the crew, so every player faces
+-- the same number of Vrill; small crews also get softer Vrill, since they have fewer revivers.
+Enemies.HEALTH_SCALE = { 0.6, 0.75, 0.95, 1.15 }
+Enemies.COUNT_SCALE = { 0.3, 0.6, 0.9, 1.2 }
 
 -- Seconds between timed swarms.
 Enemies.SWARM_INTERVAL = { 240, 360 }

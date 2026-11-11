@@ -39,8 +39,8 @@ Upgrades.ITEMS = {
 			),
 			B = up(
 				"Pressure Drive",
-				"Tighter spread, less recoil, longer range",
-				{ { "spread", "mul", 0.6 }, { "recoil", "mul", 0.7 }, { "range", "add", 40 } }
+				"Much tighter spread, half the recoil, longer range, +10% damage",
+				{ { "spread", "mul", 0.4 }, { "recoil", "mul", 0.5 }, { "range", "add", 40 }, { "damage", "mul", 1.1 } }
 			),
 		},
 	},
@@ -91,15 +91,15 @@ Upgrades.ITEMS = {
 		},
 		{
 			A = up("Fast Action", "+30% fire rate", { { "rpm", "mul", 1.3 } }),
-			B = up("Speed Loader", "30% faster reload", { { "reloadTime", "mul", 0.7 } }),
+			B = up("Speed Loader", "Half the reload time", { { "reloadTime", "mul", 0.5 } }),
 		},
 		{
 			A = up(
 				"Splitting Bolts",
-				"Fires two bolts at 75% damage each",
-				{ { "pellets", "add", 1 }, { "damage", "mul", 0.75 } }
+				"Fires two bolts at 60% damage each",
+				{ { "pellets", "add", 1 }, { "damage", "mul", 0.6 } }
 			),
-			B = up("Marksman Rail", "Much stronger weakspot hits", { { "weakspotMultiplier", "add", 1 } }),
+			B = up("Marksman Rail", "Much stronger weakspot hits", { { "weakspotMultiplier", "add", 1.5 } }),
 		},
 	},
 	RotaryCannon = {
@@ -153,17 +153,25 @@ Upgrades.ITEMS = {
 		},
 		{
 			A = up("Wide Cone", "A broader cone of fire", { { "spread", "add", 6 } }),
-			B = up("Efficient Pump", "25% less fuel per second", { { "rpm", "mul", 0.75 } }),
+			B = up(
+				"Efficient Pump",
+				"A third more fuel in the tank and in reserve",
+				{ { "magazine", "add", 70 }, { "reserve", "add", 270 } }
+			),
 		},
 	},
 	AutoPistol = {
 		{
 			A = up("Hot Loads", "+15% damage", { { "damage", "mul", 1.15 } }),
-			B = up("Drum Mag", "+18 magazine", { { "magazine", "add", 18 } }),
+			B = up("Drum Mag", "+18 magazine, +72 reserve", { { "magazine", "add", 18 }, { "reserve", "add", 72 } }),
 		},
 		{
 			A = up("Rapid Feed", "+20% fire rate", { { "rpm", "mul", 1.2 } }),
-			B = up("Quick Mags", "30% faster reload", { { "reloadTime", "mul", 0.7 } }),
+			B = up(
+				"Quick Mags",
+				"Half the reload time, +8 magazine",
+				{ { "reloadTime", "mul", 0.5 }, { "magazine", "add", 8 } }
+			),
 		},
 		{
 			A = up("Incendiary Rounds", "Hits set Vrill alight", { { "burnPerSecond", "set", 3 } }),

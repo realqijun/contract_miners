@@ -9,12 +9,13 @@ Progression.MAX_LEVEL = 5
 -- Total XP needed to reach each level (level 1 is the start).
 Progression.LEVEL_XP = { 0, 3000, 6000, 9000, 12000 }
 
--- Paid to every surviving crew member for a successful mission.
-Progression.BASE_CREDITS = { Mining = 900, Refinery = 1100 }
+-- Paid to every surviving crew member for a successful mission. With the Volticite share below, an
+-- average successful mission of either type pays about 1500 credits: 12 missions buy all 15 tiers.
+Progression.BASE_CREDITS = { Mining = 1330, Refinery = 1500 }
 Progression.BASE_XP = { Mining = 1000, Refinery = 1000 }
 
 -- Mining missions also pay per Volticite the whole team delivered.
-Progression.CREDITS_PER_VOLTICITE = 2
+Progression.CREDITS_PER_VOLTICITE = 1
 
 -- Fractions of the full reward.
 Progression.FAILURE_FRACTION = 0.25
