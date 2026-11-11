@@ -130,6 +130,7 @@ end
 local function standUp(player: Player)
 	bleedOutAt[player] = nil
 	player:SetAttribute("BleedOutAt", nil)
+	player:SetAttribute("StandUpAt", nil)
 	clearPrompt(player)
 	Vitals.revive(player, PlayerConfig.REVIVE_HEALTH_FRACTION)
 end
@@ -159,10 +160,13 @@ local function onDowned(player: Player)
 		prompts[player] = prompt
 	end
 	if Runtime.get().launch.walkthrough then
-		-- The walkthrough's practice run puts players back on their feet after a moment.
+		-- The walkthrough's practice run puts players back on their feet after a moment, fully
+		-- restored, so the practice Vrill around them cannot keep them down.
+		player:SetAttribute("StandUpAt", Workspace:GetServerTimeNow() + WalkthroughConfig.SELF_REVIVE_SECONDS)
 		task.delay(WalkthroughConfig.SELF_REVIVE_SECONDS, function()
 			if Vitals.isDowned(player) and not Flow.isOver() then
 				standUp(player)
+				Vitals.restore(player)
 			end
 		end)
 	end

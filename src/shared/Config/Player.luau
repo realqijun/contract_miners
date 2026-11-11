@@ -30,6 +30,9 @@ Player.GRAPPLE_GRACE_SECONDS = 2.5
 Player.BLEED_OUT_SECONDS = 40
 Player.REVIVE_SECONDS = 3
 Player.REVIVE_HEALTH_FRACTION = 0.3
+-- A revived miner takes no damage for this long, so the Vrill that downed them cannot drop them
+-- again before they can act.
+Player.REVIVE_PROTECTION_SECONDS = 2.5
 
 Player.HEADLAMP_RANGE = 72
 Player.HEADLAMP_ANGLE = 62

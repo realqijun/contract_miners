@@ -85,13 +85,18 @@ function Downed.start()
 		if player:GetAttribute("Downed") ~= true then
 			return
 		end
-		local bleedOutAt = player:GetAttribute("BleedOutAt")
-		local remaining = if type(bleedOutAt) == "number"
-			then math.max(0, bleedOutAt - Workspace:GetServerTimeNow())
-			else 0
+		local function secondsUntil(at: any): number
+			return if type(at) == "number" then math.ceil(math.max(0, at - Workspace:GetServerTimeNow())) else 0
+		end
 		title.Text = "YOU'RE DOWN"
-		detail.Text =
-			string.format("Bleeding out in %d  ·  hold on for a teammate to revive you", math.ceil(remaining))
+		-- The walkthrough stands players back up on its own; everywhere else a teammate must.
+		local standUpAt = player:GetAttribute("StandUpAt")
+		detail.Text = if standUpAt ~= nil
+			then string.format("Practice run  ·  back on your feet in %d", secondsUntil(standUpAt))
+			else string.format(
+				"Bleeding out in %d  ·  hold on for a teammate to revive you",
+				secondsUntil(player:GetAttribute("BleedOutAt"))
+			)
 	end)
 end
 

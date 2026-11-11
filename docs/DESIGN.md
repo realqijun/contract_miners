@@ -128,6 +128,7 @@ Classes cannot be switched during a mission.
 
 - At 0 health a player is downed, cannot act, and bleeds out after 40 seconds unless revived.
 - A teammate revives a downed player by holding interact for 3 seconds, restoring 30% health.
+- A revived player takes no damage for 2.5 seconds, so the Vrill that downed them cannot drop them again before they can act.
 - A bled-out player leaves a dog tag, and carrying it to any resupply pod respawns that player there.
 - The mission fails if every player is downed or dead at the same time.
 - In solo play, being downed means mission failure.
@@ -304,7 +305,7 @@ Enemy counts, enemy health and the Volticite target scale with the number of pla
 - The cave has four caverns: a landing cavern for mining, a cavern with a ledge about 9 studs high that every class climbs with its traversal tool, an upper cavern for Ferrin, the resupply pod and a 5 Vrill practice swarm, and a far cavern where the Lift Pod lands.
 - It runs 13 steps, each waiting on something the server sees for itself; only the camera switch is reported by the client.
 - A card at the top of the screen shows the current step with the player's own key or gamepad bindings.
-- A downed player gets back up after 5 seconds instead of failing the run.
+- A downed player gets back up after 5 seconds with full health and shield instead of failing the run, and the downed screen counts down to it.
 
 ## 15. UI
 

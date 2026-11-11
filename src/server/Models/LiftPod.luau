@@ -82,10 +82,12 @@ function LiftPod.build(base: CFrame): (Model, BasePart)
 		castShadow = false,
 	})
 	Build.light(beacon, "PointLight", { Color = GREEN, Range = 40, Brightness = 2, Shadows = false })
+	-- A soft cabin light: the crew's headlamps already light the pale hull, and anything brighter
+	-- washes the inside out to white.
 	Build.light(
 		deck,
 		"PointLight",
-		{ Color = Color3.fromRGB(255, 236, 210), Range = 20, Brightness = 1.4, Shadows = false }
+		{ Color = Color3.fromRGB(255, 236, 210), Range = 16, Brightness = 0.5, Shadows = false }
 	)
 	model.PrimaryPart = deck
 	return model, deck

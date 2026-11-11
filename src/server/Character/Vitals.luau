@@ -17,6 +17,8 @@ type State = {
 	humanoid: Humanoid,
 	shield: number,
 	lastDamaged: number,
+	-- os.clock() until which damage is ignored, after a revive.
+	protectedUntil: number,
 }
 
 local states: { [Player]: State } = {}
@@ -43,7 +45,13 @@ function Vitals.track(player: Player, character: Model)
 	humanoid.BreakJointsOnDeath = false
 	humanoid.MaxHealth = PlayerConfig.MAX_HEALTH
 	humanoid.Health = PlayerConfig.MAX_HEALTH
-	local state = { character = character, humanoid = humanoid, shield = PlayerConfig.MAX_SHIELD, lastDamaged = 0 }
+	local state = {
+		character = character,
+		humanoid = humanoid,
+		shield = PlayerConfig.MAX_SHIELD,
+		lastDamaged = 0,
+		protectedUntil = 0,
+	}
 	states[player] = state
 	player:SetAttribute("Downed", false)
 	publish(player, state)
@@ -61,7 +69,7 @@ end
 -- Applies damage to shield then health. Downs the player instead of killing them.
 function Vitals.damage(player: Player, amount: number)
 	local state = states[player]
-	if not state or amount <= 0 or not Vitals.isAlive(player) then
+	if not state or amount <= 0 or not Vitals.isAlive(player) or os.clock() < state.protectedUntil then
 		return
 	end
 	-- Studio-only test hook: automated playtests can make the crew invulnerable.
@@ -99,7 +107,7 @@ function Vitals.heal(player: Player, amount: number)
 	state.humanoid.Health = math.min(state.humanoid.MaxHealth, state.humanoid.Health + amount)
 end
 
--- Brings a downed player back up with a fraction of their health.
+-- Brings a downed player back up with a fraction of their health, briefly protected.
 function Vitals.revive(player: Player, healthFraction: number)
 	local state = states[player]
 	if not state or not Vitals.isDowned(player) then
@@ -108,6 +116,7 @@ function Vitals.revive(player: Player, healthFraction: number)
 	player:SetAttribute("Downed", false)
 	state.humanoid.Health = math.max(1, state.humanoid.MaxHealth * healthFraction)
 	state.lastDamaged = os.clock()
+	state.protectedUntil = os.clock() + PlayerConfig.REVIVE_PROTECTION_SECONDS
 	publish(player, state)
 end
 
