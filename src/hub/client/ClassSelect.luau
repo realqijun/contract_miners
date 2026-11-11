@@ -64,7 +64,7 @@ local function card(parent: Instance, classId: Classes.ClassId, data: Progress.D
 		TextSize = 14,
 		Font = Theme.FONT_BOLD,
 		-- XP within the current level, the same span the bar below fills.
-		Text = `Level {level}` .. (if nextXp then `  ·  {xp - floorXp} / {nextXp - floorXp} XP` else "  ·  max"),
+		Text = `Level {level}` .. (if nextXp then `  ·  {xp - floorXp} / {nextXp - floorXp} XP` else "  ·  Max"),
 	})
 	local bar = Theme.bar(frame, info.color, UDim2.fromOffset(14, 82), UDim2.new(1, -28, 0, 4))
 	bar.set(if nextXp then (xp - floorXp) / (nextXp - floorXp) else 1)
