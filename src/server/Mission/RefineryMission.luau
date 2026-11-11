@@ -327,6 +327,9 @@ local function callRefinery(site: Vector3)
 		MissionState.set(KEYS.WellsConnected, 0)
 		for _, pipeline in pipelines do
 			mark(pipeline.model, `Well {pipeline.index}`, Color3.fromRGB(176, 96, 255))
+			if pipeline.start then
+				pipeline.start.Enabled = true
+			end
 		end
 		updateScreen()
 	end)
@@ -361,8 +364,9 @@ local function placeWells(layout: Layout.CaveLayout, siteCavern: Layout.Cavern, 
 			resume = nil,
 		}
 		local start = prompt(valve, "Start pipeline", `Well {index}`, 0.5)
-		-- Reachable from anywhere around the crust ring.
+		-- Reachable from anywhere around the crust ring, once the Refinery is down to pipe into.
 		start.MaxActivationDistance = 12
+		start.Enabled = false
 		start.Triggered:Connect(function(player)
 			beginLaying(pipeline, player)
 		end)
