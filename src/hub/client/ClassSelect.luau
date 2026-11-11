@@ -50,6 +50,7 @@ local function card(parent: Instance, classId: Classes.ClassId, data: Progress.D
 	local xp = data.classes[classId].xp
 	local level = Progression.levelFor(xp)
 	local nextXp = Progression.LEVEL_XP[level + 1]
+	local floorXp = Progression.LEVEL_XP[level] or 0
 	Theme.label(frame, {
 		Position = UDim2.fromOffset(14, 40),
 		Size = UDim2.new(1, -28, 0, 18),
@@ -62,10 +63,10 @@ local function card(parent: Instance, classId: Classes.ClassId, data: Progress.D
 		Size = UDim2.new(1, -28, 0, 18),
 		TextSize = 14,
 		Font = Theme.FONT_BOLD,
-		Text = `Level {level}` .. (if nextXp then `  ·  {xp} / {nextXp} XP` else "  ·  max"),
+		-- XP within the current level, the same span the bar below fills.
+		Text = `Level {level}` .. (if nextXp then `  ·  {xp - floorXp} / {nextXp - floorXp} XP` else "  ·  max"),
 	})
 	local bar = Theme.bar(frame, info.color, UDim2.fromOffset(14, 82), UDim2.new(1, -28, 0, 4))
-	local floorXp = Progression.LEVEL_XP[level] or 0
 	bar.set(if nextXp then (xp - floorXp) / (nextXp - floorXp) else 1)
 	local list = Instance.new("Frame")
 	list.BackgroundTransparency = 1
