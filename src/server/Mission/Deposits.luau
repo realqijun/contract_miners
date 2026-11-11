@@ -10,6 +10,7 @@ local Layout = require(Shared.Cave.Layout)
 local WalkthroughCave = require(Shared.Cave.WalkthroughCave)
 local Missions = require(Shared.Config.Missions)
 local MissionState = require(Shared.MissionState)
+local Pickaxe = require(Shared.Config.Pickaxe)
 local Resources = require(Shared.Config.Resources)
 
 local Server = script.Parent.Parent
@@ -23,6 +24,9 @@ local Deposits = {}
 local KEYS = MissionState.KEYS
 local MIN_SPACING = 9
 local DROPCAN_CLEARANCE = 14
+-- How high above walkable floor a vein can sit and still be mined from the floor: the pickaxe's
+-- reach from head height, less a little for standing back from the wall.
+local VEIN_REACH = Pickaxe.RANGE + 3
 
 local folder: Folder
 
@@ -40,21 +44,29 @@ local function spacedFrom(position: Vector3, clearOf: Vector3): boolean
 	return true
 end
 
--- Finds a free surface spot in `cavern`, trying a few random rays.
+-- Finds a free surface spot in `cavern`, trying a few random rays. `accept`, when given, must
+-- also agree to the spot.
 local function findSpot(
 	rng: Random,
 	cavern: Layout.Cavern,
 	kinds: { [Surface.Kind]: boolean },
-	dropcan: Vector3
+	dropcan: Vector3,
+	accept: ((Surface.Hit) -> boolean)?
 ): Surface.Hit?
 	for _ = 1, 12 do
 		local hit = Surface.scatter(rng, cavern, 1, kinds)[1]
-		if hit and spacedFrom(hit.position, dropcan) then
+		if hit and spacedFrom(hit.position, dropcan) and (not accept or accept(hit)) then
 			table.insert(placed, hit.position)
 			return hit
 		end
 	end
 	return nil
+end
+
+-- Can a miner standing on the floor below reach this spot with the pickaxe?
+local function withinReach(hit: Surface.Hit): boolean
+	local floor = Surface.raycast(hit.position + hit.normal * 3, Vector3.new(0, -VEIN_REACH * 4, 0))
+	return floor ~= nil and floor.kind == "Floor" and hit.position.Y - floor.position.Y <= VEIN_REACH
 end
 
 local function weightedCavern(
@@ -85,18 +97,28 @@ local function placeVolticite(rng: Random, world: Runtime.World, dropcan: Vector
 		weights[index] = weight
 		weightTotal += weight
 	end
+	-- The target's worth sits within reach of the floor, so any crew, even a lone Scout, can
+	-- finish without climbing; the surplus can be anywhere, up the walls and on the ceilings,
+	-- where the traversal tools earn their keep.
 	local everywhere = { Wall = true, Ceiling = true, Floor = true }
 	local remaining = total
+	local reachable = 0
 	local attempts = 0
-	while remaining > 0 and attempts < veins * 8 do
+	while remaining > 0 and attempts < veins * 20 do
 		attempts += 1
 		local cavern = weightedCavern(rng, world.layout.caverns, weights, weightTotal)
-		local spot = findSpot(rng, cavern, everywhere, dropcan)
+		local spot = findSpot(rng, cavern, everywhere, dropcan, if reachable < target then withinReach else nil)
 		if spot then
 			local amount = math.min(Resources.VOLTICITE_PER_VEIN, remaining)
 			Minerals.volticite(folder, spot.position, spot.normal, rng, amount)
 			remaining -= amount
+			if withinReach(spot) then
+				reachable += amount
+			end
 		end
+	end
+	if reachable < target then
+		warn(`Only {reachable} of {target} Volticite within reach of the floor on seed {world.launch.seed}`)
 	end
 	MissionState.set(KEYS.Target, target)
 	MissionState.set(KEYS.Deposited, 0)

@@ -194,6 +194,7 @@ Enemy counts, enemy health and the Volticite target scale with the number of pla
 - 3D noise shapes organic walls.
 - Every cavern is reachable from the Dropcan, though some need vertical climbs or digging.
 - Volticite veins, Ferrin nodes and health crystals spawn on cavern walls and ceilings as anchored MeshParts with no physics.
+- At least the target's worth of Volticite sits within pickaxe reach of walkable floor, so any crew, even a lone Scout, can finish without climbing; the surplus can be anywhere, rewarding the traversal tools.
 - There is one biome: dark violet crystal caves with glowing fungi and ambient particles, lit with Future lighting and fog.
 - The same seed always produces the same cave.
 
