@@ -45,6 +45,8 @@ type Pipeline = {
 	layer: Player?,
 	connected: boolean,
 	resume: BasePart?,
+	-- The well's "Start pipeline" prompt, retired once the pipeline has begun.
+	start: ProximityPrompt?,
 }
 
 local pipelines: { Pipeline } = {}
@@ -165,6 +167,10 @@ local function beginLaying(pipeline: Pipeline, player: Player)
 		return
 	end
 	clearResume(pipeline)
+	-- From here on the pipe end, not the well, is where the pipeline continues.
+	if pipeline.start then
+		pipeline.start.Enabled = false
+	end
 	pipeline.layer = player
 	player:SetAttribute("LayingPipe", pipeline.index)
 end
@@ -196,6 +202,9 @@ local function connect(pipeline: Pipeline)
 	local current = refinery :: RefineryModels.Refinery
 	addSegment(pipeline, pipeline.nodes[#pipeline.nodes], current.inlet)
 	pipeline.connected = true
+	if pipeline.start then
+		pipeline.start.Enabled = false
+	end
 	local layer = pipeline.layer
 	if layer then
 		layer:SetAttribute("LayingPipe", nil)
@@ -357,6 +366,7 @@ local function placeWells(layout: Layout.CaveLayout, siteCavern: Layout.Cavern, 
 		start.Triggered:Connect(function(player)
 			beginLaying(pipeline, player)
 		end)
+		pipeline.start = start
 		table.insert(pipelines, pipeline)
 	end
 end
