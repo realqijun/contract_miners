@@ -101,7 +101,10 @@ end
 
 -- Teleports a crew into a fresh reserved Mission server carrying `launchData`.
 function LaunchPads.teleport(crew: { Player }, launchData: LaunchData.LaunchData)
-	if RunService:IsStudio() or not Places.published() then
+	if RunService:IsStudio() then
+		notice(crew, "Launching only works in the live game, not in Studio.")
+		return
+	elseif not Places.published() then
 		notice(crew, "Launching works once the experience is published.")
 		return
 	end

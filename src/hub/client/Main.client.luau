@@ -43,7 +43,7 @@ gui.ScreenInsets = Enum.ScreenInsets.CoreUISafeInsets
 gui.Parent = player:WaitForChild("PlayerGui")
 
 local function walkthroughOffer()
-	local content = Menu.open("Welcome aboard, miner", 620, 230)
+	local content = Menu.open("Welcome aboard, miner", 620, 196)
 	Theme.label(content, {
 		Size = UDim2.new(1, 0, 0, 70),
 		TextWrapped = true,
@@ -170,20 +170,31 @@ task.spawn(function()
 	end
 end)
 
--- Brief notices from the server.
-local noticeLabel = Theme.label(gui, {
-	AnchorPoint = Vector2.new(0.5, 1),
-	Position = UDim2.new(0.5, 0, 1, -40),
-	Size = UDim2.fromOffset(700, 30),
+-- Brief notices from the server, on a panel sized to the text so they read over any floor.
+local noticePanel = Theme.panel("Notice", gui)
+noticePanel.AnchorPoint = Vector2.new(0.5, 1)
+noticePanel.Position = UDim2.new(0.5, 0, 1, -40)
+noticePanel.Size = UDim2.fromOffset(0, 40)
+noticePanel.AutomaticSize = Enum.AutomaticSize.X
+noticePanel.Visible = false
+local noticePadding = Instance.new("UIPadding")
+noticePadding.PaddingLeft = UDim.new(0, 18)
+noticePadding.PaddingRight = UDim.new(0, 18)
+noticePadding.Parent = noticePanel
+local noticeLabel = Theme.label(noticePanel, {
+	Size = UDim2.fromScale(0, 1),
+	AutomaticSize = Enum.AutomaticSize.X,
 	Font = Theme.FONT_BOLD,
 	TextSize = 18,
 	TextXAlignment = Enum.TextXAlignment.Center,
 })
 Net.event("Notice").OnClientEvent:Connect(function(text: string)
 	noticeLabel.Text = text
+	noticePanel.Visible = true
 	task.delay(4, function()
 		if noticeLabel.Text == text then
 			noticeLabel.Text = ""
+			noticePanel.Visible = false
 		end
 	end)
 end)
