@@ -7,7 +7,8 @@ local Build = require(ReplicatedStorage.Shared.Build)
 
 local LiftPod = {}
 
-local HULL = Color3.fromRGB(214, 206, 190)
+-- A mid-tone hull: a headlamp at arm's length washes a paler one out to white inside the cabin.
+local HULL = Color3.fromRGB(150, 144, 134)
 local TRIM = Color3.fromRGB(46, 44, 54)
 local GREEN = Color3.fromRGB(120, 255, 150)
 local ORANGE = Color3.fromRGB(232, 120, 36)
@@ -81,9 +82,11 @@ function LiftPod.build(base: CFrame): (Model, BasePart)
 		material = Enum.Material.Neon,
 		castShadow = false,
 	})
-	Build.light(beacon, "PointLight", { Color = GREEN, Range = 40, Brightness = 2, Shadows = false })
-	-- A soft cabin light: the crew's headlamps already light the pale hull, and anything brighter
-	-- washes the inside out to white.
+	-- The beacon lights the landing site; its shadows keep the roof between it and the cabin, which
+	-- it would otherwise flood with green.
+	Build.light(beacon, "PointLight", { Color = GREEN, Range = 40, Brightness = 2, Shadows = true })
+	-- A soft cabin light: the crew's headlamps already light the hull, and anything brighter washes
+	-- the inside out.
 	Build.light(
 		deck,
 		"PointLight",
