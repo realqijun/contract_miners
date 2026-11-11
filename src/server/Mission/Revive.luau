@@ -33,8 +33,9 @@ local function checkWipe()
 		return
 	end
 	-- The walkthrough gets players back up on its own instead of ending.
-	if #Crew.standing() == 0 and not Runtime.get().launch.walkthrough then
-		Flow.fail("The whole crew went down")
+	local launch = Runtime.get().launch
+	if #Crew.standing() == 0 and not launch.walkthrough then
+		Flow.fail(if launch.partySize == 1 then "You went down" else "The whole crew went down")
 	end
 end
 

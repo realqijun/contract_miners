@@ -59,6 +59,7 @@ local function show()
 	card.Position = UDim2.fromScale(0.5, 0.5)
 	card.Size = UDim2.fromOffset(560, 0)
 	card.AutomaticSize = Enum.AutomaticSize.Y
+	card.BackgroundTransparency = 0
 	local padding = Instance.new("UIPadding")
 	for _, side in { "PaddingTop", "PaddingBottom", "PaddingLeft", "PaddingRight" } do
 		(padding :: any)[side] = UDim.new(0, 24)

@@ -30,6 +30,17 @@ local markers: { [any]: Marker } = {}
 local compass: Frame
 local COMPASS_WIDTH = 360
 local COMPASS_FOV = 180
+local EDGE_FADE = 20
+local DIRECTIONS: { [number]: string } = {
+	[0] = "N",
+	[45] = "NE",
+	[90] = "E",
+	[135] = "SE",
+	[180] = "S",
+	[225] = "SW",
+	[270] = "W",
+	[315] = "NW",
+}
 
 local function makeBillboard(text: string, color: Color3): (BillboardGui, TextLabel, TextLabel)
 	local gui = Instance.new("BillboardGui")
@@ -211,24 +222,43 @@ local function buildCompass()
 	centre.BackgroundColor3 = Theme.ACCENT
 	centre.BorderSizePixel = 0
 	centre.Parent = compass
-	local cardinals = {}
-	for _, entry in { { "N", 0 }, { "E", 90 }, { "S", 180 }, { "W", 270 } } do
-		local label = Theme.label(compass, {
-			AnchorPoint = Vector2.new(0.5, 0),
-			Size = UDim2.fromOffset(24, 18),
-			Position = UDim2.fromOffset(0, 4),
-			Font = Theme.FONT_BOLD,
-			TextSize = 14,
-			TextXAlignment = Enum.TextXAlignment.Center,
-			Text = entry[1],
-		})
-		table.insert(cardinals, { label = label, bearing = entry[2] })
+	-- Cardinal and intercardinal letters, with a small tick every 15 degrees between them.
+	local marks = {}
+	for bearing = 0, 345, 15 do
+		local letter = DIRECTIONS[bearing]
+		local mark: GuiObject
+		if letter then
+			local cardinal = bearing % 90 == 0
+			mark = Theme.label(compass, {
+				AnchorPoint = Vector2.new(0.5, 0),
+				Size = UDim2.fromOffset(28, 18),
+				Font = if cardinal then Theme.FONT_BOLD else Theme.FONT,
+				TextSize = if cardinal then 14 else 12,
+				TextColor3 = if cardinal then Theme.TEXT else Theme.TEXT_DIM,
+				TextXAlignment = Enum.TextXAlignment.Center,
+				Text = letter,
+			})
+		else
+			local tick = Instance.new("Frame")
+			tick.AnchorPoint = Vector2.new(0.5, 0)
+			tick.Size = UDim2.fromOffset(1, 5)
+			tick.BackgroundColor3 = Theme.TEXT_DIM
+			tick.BorderSizePixel = 0
+			tick.Parent = compass
+			mark = tick
+		end
+		table.insert(marks, { gui = mark, bearing = bearing, top = if letter then 4 else 9 })
 	end
-	return cardinals
+	return marks
+end
+
+-- Marks fade out over the last stretch before the strip's edges instead of being cut in half.
+local function edgeFade(delta: number): number
+	return math.clamp((math.abs(delta) - (COMPASS_FOV / 2 - EDGE_FADE)) / EDGE_FADE, 0, 1)
 end
 
 function Markers.start()
-	local cardinals = buildCompass()
+	local marks = buildCompass()
 	CollectionService:GetInstanceAddedSignal("Marker"):Connect(trackTagged)
 	CollectionService:GetInstanceRemovedSignal("Marker"):Connect(remove)
 	for _, instance in CollectionService:GetTagged("Marker") do
@@ -242,10 +272,17 @@ function Markers.start()
 
 	RunService.RenderStepped:Connect(function()
 		local heading = headingDegrees()
-		for _, cardinal in cardinals do
-			local delta = (cardinal.bearing - heading + 540) % 360 - 180
-			cardinal.label.Visible = math.abs(delta) <= COMPASS_FOV / 2
-			cardinal.label.Position = UDim2.new(0.5 + delta / COMPASS_FOV, 0, 0, 4)
+		for _, mark in marks do
+			local delta = (mark.bearing - heading + 540) % 360 - 180
+			local gui = mark.gui
+			gui.Visible = math.abs(delta) < COMPASS_FOV / 2
+			gui.Position = UDim2.new(0.5 + delta / COMPASS_FOV, 0, 0, mark.top)
+			local fade = edgeFade(delta)
+			if gui:IsA("TextLabel") then
+				gui.TextTransparency = fade
+			else
+				gui.BackgroundTransparency = 0.3 + 0.7 * fade
+			end
 		end
 		local eye = camera.CFrame.Position
 		local now = os.clock()
@@ -268,6 +305,7 @@ function Markers.start()
 				marker.pip.Visible = x ~= nil
 				if x then
 					marker.pip.Position = UDim2.fromScale(x, 0.75)
+					marker.pip.BackgroundTransparency = edgeFade((x - 0.5) * COMPASS_FOV)
 				end
 			end
 		end

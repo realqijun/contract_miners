@@ -5,9 +5,11 @@ local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
+local TeleportService = game:GetService("TeleportService")
 local Workspace = game:GetService("Workspace")
 
 local Shared = ReplicatedStorage.Shared
+local CaveConfig = require(Shared.Config.Cave)
 local Classes = require(Shared.Config.Classes)
 local Layout = require(Shared.Cave.Layout)
 local WalkthroughCave = require(Shared.Cave.WalkthroughCave)
@@ -16,6 +18,7 @@ local LaunchData = require(Shared.LaunchData)
 local Missions = require(Shared.Config.Missions)
 local MissionState = require(Shared.MissionState)
 local Net = require(Shared.Net)
+local Places = require(Shared.Config.Places)
 
 local Server = ServerScriptService.Server
 local Atmosphere = require(Server.Cave.Atmosphere)
@@ -45,6 +48,9 @@ local Resupply = require(Server.Mission.Resupply)
 local Walkthrough = require(Server.Mission.Walkthrough)
 
 local KEYS = MissionState.KEYS
+-- The fallback landing pad's size: room for the Dropcan and the crew's landing ring.
+local LANDING_PAD_RADIUS = 16
+local LANDING_HEADROOM = 20
 
 Players.CharacterAutoLoads = false
 Net.createAll()
@@ -68,7 +74,7 @@ local function studioLaunch(player: Player): LaunchData.LaunchData
 	}
 end
 
-local function resolveLaunch(): LaunchData.LaunchData
+local function resolveLaunch(): LaunchData.LaunchData?
 	local first = Players:GetPlayers()[1] or Players.PlayerAdded:Wait()
 	local launch = LaunchData.validate(first:GetJoinData().TeleportData)
 	if launch then
@@ -77,11 +83,29 @@ local function resolveLaunch(): LaunchData.LaunchData
 	if RunService:IsStudio() then
 		return studioLaunch(first)
 	end
-	-- A mission server reached without a valid launch cannot run; send everyone back.
-	error("Mission server started without valid launch data")
+	return nil
 end
 
-local launch = resolveLaunch()
+local resolved = resolveLaunch()
+if not resolved then
+	-- A mission server reached without a valid launch (a direct join, or tampered teleport data)
+	-- cannot run: everyone who arrives goes back to the hub.
+	warn("Mission server started without valid launch data; returning players to the hub")
+	local function sendBack(player: Player)
+		local ok, err = pcall(function()
+			TeleportService:TeleportAsync(Places.HUB, { player })
+		end)
+		if not ok then
+			warn("Returning a player to the hub failed:", err)
+		end
+	end
+	Players.PlayerAdded:Connect(sendBack)
+	for _, player in Players:GetPlayers() do
+		task.spawn(sendBack, player)
+	end
+	return
+end
+local launch: LaunchData.LaunchData = resolved
 MissionState.set(KEYS.MissionType, launch.missionType)
 MissionState.set(KEYS.Seed, launch.seed)
 MissionState.set(KEYS.PartySize, launch.partySize)
@@ -96,9 +120,34 @@ else
 end
 Carver.carve(layout)
 
+-- The Dropcan lands on open, level floor in the start cavern. In the rare cave with none, it
+-- flattens a pad at the cavern's centre: rock up to the floor level, open air above.
 local startCavern = layout.caverns[layout.startCavern]
-local landing = Surface.floorBelow(Surface.cavernOrigin(startCavern), startCavern.radii.Y * 2)
-	or Vector3.new(startCavern.center.X, startCavern.floorY, startCavern.center.Z)
+local landing = Crew.landingSite(startCavern)
+if not landing then
+	local site = Vector3.new(
+		startCavern.center.X,
+		math.round(startCavern.floorY / CaveConfig.VOXEL) * CaveConfig.VOXEL,
+		startCavern.center.Z
+	)
+	warn(`No level landing in the start cavern of seed {launch.seed}; flattening a pad`)
+	Workspace.Terrain:FillCylinder(
+		CFrame.new(site + Vector3.yAxis * LANDING_HEADROOM / 2),
+		LANDING_HEADROOM,
+		LANDING_PAD_RADIUS,
+		Enum.Material.Air
+	)
+	Workspace.Terrain:FillCylinder(
+		CFrame.new(site - Vector3.yAxis * CaveConfig.VOXEL),
+		CaveConfig.VOXEL * 2,
+		LANDING_PAD_RADIUS,
+		Enum.Material.Slate
+	)
+	-- Measure the pad once the edit has reached collision.
+	task.wait()
+	landing = Surface.floorBelow(site + Vector3.yAxis * CaveConfig.VOXEL * 2, CaveConfig.VOXEL * 4) or site
+end
+assert(landing, "landing resolved")
 local dropcan = Dropcan.build(Workspace, CFrame.new(landing))
 Runtime.init({ launch = launch, layout = layout, dropcan = dropcan, landing = landing })
 if spots then
