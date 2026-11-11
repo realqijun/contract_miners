@@ -51,11 +51,14 @@ return function(): Loadout.Item
 
 	-- The equipment panel shows the heavy swing's cooldown while the pickaxe is in hand.
 	local function showStatus()
-		local cooldown = math.clamp((os.clock() - lastHeavy) / PickaxeConfig.HEAVY_COOLDOWN, 0, 1)
+		local elapsed = os.clock() - lastHeavy
+		local cooldown = math.clamp(elapsed / PickaxeConfig.HEAVY_COOLDOWN, 0, 1)
 		EquipmentHud.show({
 			name = "Pickaxe",
 			bar = cooldown,
-			note = if cooldown >= 1 then "Heavy swing ready" else nil,
+			note = if cooldown >= 1
+				then "Heavy swing ready"
+				else `Heavy swing in {math.ceil(PickaxeConfig.HEAVY_COOLDOWN - elapsed)}s`,
 		})
 	end
 

@@ -131,6 +131,15 @@ local function objective()
 		TextSize = 14,
 		TextColor3 = Theme.FERRIN,
 	})
+	-- Long lines (a pipeline in progress, a resupply on offer) shrink to fit instead of running
+	-- past the panel.
+	for _, label in { goal, carrying, ferrin } do
+		local size = label.TextSize
+		label.TextScaled = true
+		local constraint = Instance.new("UITextSizeConstraint")
+		constraint.MaxTextSize = size
+		constraint.Parent = label
+	end
 
 	local function update()
 		local missionType = MissionState.get(KEYS.MissionType)
@@ -169,7 +178,7 @@ local function objective()
 				local connected = MissionState.get(KEYS.WellsConnected) or 0
 				goal.Text = `Connect the wells  {connected} / {Missions.REFINERY_WELLS}`
 				carrying.Text = if laying
-					then `Laying pipe from well {laying}: walk it back to the Refinery`
+					then `Laying pipe from well {laying} back to the Refinery`
 					else "Start a pipeline at a well"
 				progress.set(connected / Missions.REFINERY_WELLS)
 			elseif stage == "Pumping" then
