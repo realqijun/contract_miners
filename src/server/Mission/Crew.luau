@@ -17,6 +17,7 @@ local Vitals = require(Server.Character.Vitals)
 local Weapons = require(Server.Equipment.Weapons)
 local Tools = require(Server.Equipment.Tools)
 local Runtime = require(script.Parent.Runtime)
+local Flow = require(script.Parent.Flow)
 
 local Crew = {}
 
@@ -31,6 +32,8 @@ local RING_PLACES = 7
 local LANDING_SEARCH_STEP = 6
 local LANDING_LEVEL_TOLERANCE = 8
 local LANDING_SPOT_TOLERANCE = 3
+-- Seconds before a miner lost outside the cave is put back at the Dropcan.
+local LOST_RESPAWN_SECONDS = 2
 
 -- Is `player` part of this mission's launch crew?
 function Crew.isCrew(player: Player): boolean
@@ -58,6 +61,18 @@ function Crew.spawn(player: Player, at: CFrame)
 	end
 	if not player:HasAppearanceLoaded() then
 		player.CharacterAppearanceLoaded:Wait()
+	end
+	-- The game's own damage downs players instead of killing them, so a Humanoid that dies anyway
+	-- fell out of the cave or was flung by physics. Put the miner back at the Dropcan rather than
+	-- leave a lifeless character the mission still counts as standing.
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	if humanoid then
+		humanoid.Died:Once(function()
+			task.wait(LOST_RESPAWN_SECONDS)
+			if player.Parent and player.Character == character and not Flow.isOver() then
+				Crew.spawn(player, Crew.ringSpot(Runtime.get().landing, 1, LANDING_RING))
+			end
+		end)
 	end
 	-- Only satchel charges damage the crew; this tag is how they find us.
 	CollectionService:AddTag(character, "Crew")

@@ -129,6 +129,7 @@ Classes cannot be switched during a mission.
 - At 0 health a player is downed, cannot act, and bleeds out after 40 seconds unless revived.
 - A teammate revives a downed player by holding interact for 3 seconds, restoring 30% health.
 - A revived player takes no damage for 2.5 seconds, so the Vrill that downed them cannot drop them again before they can act.
+- A miner whose character is lost outside the game's rules, such as falling out of the cave through a physics glitch, is put back at the Dropcan after 2 seconds instead of leaving the mission stuck.
 - A bled-out player leaves a dog tag, and carrying it to any resupply pod respawns that player there.
 - The mission fails if every player is downed or dead at the same time.
 - In solo play, being downed means mission failure.
