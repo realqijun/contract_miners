@@ -269,13 +269,18 @@ local function teamRow(list: Frame, member: Player): Frame
 	member:GetAttributeChangedSignal("Class"):Connect(updateClass)
 	updateClass()
 
-	local function updateDowned()
+	local function updateState()
+		local dead = member:GetAttribute("Dead") == true
 		local downed = member:GetAttribute("Downed") == true
-		name.TextColor3 = if downed then Theme.WARNING else Theme.TEXT
-		name.Text = member.DisplayName .. (if downed then "  ·  DOWN" else "")
+		name.TextColor3 = if dead or downed then Theme.WARNING else Theme.TEXT
+		name.Text = member.DisplayName .. (if dead then "  ·  DEAD" elseif downed then "  ·  DOWN" else "")
+		if dead then
+			bar.set(0)
+		end
 	end
-	member:GetAttributeChangedSignal("Downed"):Connect(updateDowned)
-	updateDowned()
+	member:GetAttributeChangedSignal("Downed"):Connect(updateState)
+	member:GetAttributeChangedSignal("Dead"):Connect(updateState)
+	updateState()
 
 	local function watch(character: Model)
 		local humanoid = character:WaitForChild("Humanoid") :: Humanoid

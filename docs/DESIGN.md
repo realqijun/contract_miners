@@ -309,10 +309,13 @@ Enemy counts, enemy health and the Volticite target scale with the number of pla
 ## 15. UI
 
 - The HUD shows health, shield, ammo, grenades, flares, the objective tracker and team status.
+- Holding the team status key in a mission shows every crew member's class, health, shield, state, Volticite carried and delivered, and kills.
+- Gamepad has no team status button, since every button is taken; the HUD's crew panel covers the essentials.
 - On-screen markers show the Dropcan, Lift Pod, Refinery, wells, teammates and pings, with distance readouts.
 - A compass strip sits at the top of the screen.
 - There is no minimap and no 3D scanner map.
 - The settings menu contains mouse sensitivity, gamepad sensitivity, invert Y, field of view, master, music and SFX volume, and gamepad aim assist strength.
+- A Controls tab beside the settings lists every binding for keyboard and gamepad, the same list the hub's controls board shows.
 - Gamepad aim assist slows aim near enemies.
 - Settings save per player.
 - The menu key opens the settings menu in the hub and in missions, and closes any open menu.

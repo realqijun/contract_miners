@@ -108,9 +108,13 @@ end
 
 export type ButtonStyle = "Primary" | "Secondary" | "Disabled" | "Selected"
 
+-- The plain button colour, and the text colour that reads on an accent background.
+Menu.SECONDARY = Color3.fromRGB(56, 50, 74)
+Menu.ON_ACCENT = Color3.fromRGB(24, 16, 8)
+
 local STYLE_COLORS: { [ButtonStyle]: Color3 } = {
 	Primary = Theme.ACCENT,
-	Secondary = Color3.fromRGB(56, 50, 74),
+	Secondary = Menu.SECONDARY,
 	Disabled = Color3.fromRGB(40, 36, 50),
 	Selected = Color3.fromRGB(110, 200, 120),
 }
@@ -123,7 +127,7 @@ function Menu.button(parent: Instance, text: string, onClick: () -> (), style: B
 	button.BorderSizePixel = 0
 	button.Font = Theme.FONT_BOLD
 	button.TextSize = 15
-	button.TextColor3 = if chosen == "Primary" then Color3.fromRGB(24, 16, 8) else Theme.TEXT
+	button.TextColor3 = if chosen == "Primary" then Menu.ON_ACCENT else Theme.TEXT
 	button.TextWrapped = true
 	button.Text = text
 	button.Size = UDim2.fromOffset(160, 36)
@@ -195,34 +199,42 @@ function Menu.slider(
 			setFromX(input.Position.X)
 		end
 	end)
-	UserInputService.InputChanged:Connect(function(input)
-		if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
-			setFromX(input.Position.X)
+	-- Global input listeners live only as long as the slider does.
+	local connections = {
+		UserInputService.InputChanged:Connect(function(input)
+			if dragging and input.UserInputType == Enum.UserInputType.MouseMovement then
+				setFromX(input.Position.X)
+			end
+		end),
+		UserInputService.InputEnded:Connect(function(input)
+			if
+				input.UserInputType == Enum.UserInputType.MouseButton1
+				or input.UserInputType == Enum.UserInputType.Touch
+			then
+				dragging = false
+			end
+		end),
+		-- Gamepad: left/right on a selected track nudges it.
+		UserInputService.InputBegan:Connect(function(input)
+			if GuiService.SelectedObject ~= track then
+				return
+			end
+			local step = (max - min) / 20
+			if input.KeyCode == Enum.KeyCode.DPadRight then
+				current_ = math.min(max, current_ + step)
+			elseif input.KeyCode == Enum.KeyCode.DPadLeft then
+				current_ = math.max(min, current_ - step)
+			else
+				return
+			end
+			render()
+			onChange(current_)
+		end),
+	}
+	row.Destroying:Connect(function()
+		for _, connection in connections do
+			connection:Disconnect()
 		end
-	end)
-	UserInputService.InputEnded:Connect(function(input)
-		if
-			input.UserInputType == Enum.UserInputType.MouseButton1
-			or input.UserInputType == Enum.UserInputType.Touch
-		then
-			dragging = false
-		end
-	end)
-	-- Gamepad: left/right on a selected track nudges it.
-	UserInputService.InputBegan:Connect(function(input)
-		if GuiService.SelectedObject ~= track then
-			return
-		end
-		local step = (max - min) / 20
-		if input.KeyCode == Enum.KeyCode.DPadRight then
-			current_ = math.min(max, current_ + step)
-		elseif input.KeyCode == Enum.KeyCode.DPadLeft then
-			current_ = math.max(min, current_ - step)
-		else
-			return
-		end
-		render()
-		onChange(current_)
 	end)
 	render()
 	return row

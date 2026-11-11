@@ -17,6 +17,7 @@ local Progress = require(Shared.Progress)
 
 local Client = ReplicatedStorage.Client
 local Audio = require(Client.Audio)
+local Controls = require(Client.Controls)
 local Input = require(Client.Input)
 local Settings = require(Client.Settings)
 local ProgressView = require(Client.ProgressView)
@@ -199,24 +200,7 @@ Net.event("Notice").OnClientEvent:Connect(function(text: string)
 	end)
 end)
 
--- Fill in the controls board on the back wall.
-local ACTIONS: { { string } } = {
-	{ "Fire / mine", "Fire" },
-	{ "Heavy swing (pickaxe)", "AltFire" },
-	{ "Reload", "Reload" },
-	{ "Primary / secondary weapon", "Primary" },
-	{ "Traversal tool", "Traversal" },
-	{ "Support tool", "Support" },
-	{ "Pickaxe", "Pickaxe" },
-	{ "Grenade", "Grenade" },
-	{ "Flare", "Flare" },
-	{ "Interact / revive / deposit", "Interact" },
-	{ "Ping (hold: call resupply)", "Ping" },
-	{ "First / third person", "CameraToggle" },
-	{ "Sprint", "Sprint" },
-	{ "Crouch", "Crouch" },
-	{ "Settings", "Menu" },
-}
+-- Fill in the controls board on the back wall: two columns of eight.
 local function fillBoard(board: Instance)
 	local surface = board:WaitForChild("Controls") :: SurfaceGui
 	local title = Theme.label(surface, {
@@ -228,23 +212,24 @@ local function fillBoard(board: Instance)
 		Text = "CONTROLS",
 	})
 	title.TextXAlignment = Enum.TextXAlignment.Left
-	for index, entry in ACTIONS do
-		local column = if index <= 8 then 0 else 1
-		local row = if index <= 8 then index - 1 else index - 9
-		local action = entry[2] :: Input.Action
-		local keyboard = Input.LABELS.keyboard[action] or "-"
-		local gamepad = Input.LABELS.gamepad[action]
-			or (if action == "Primary" then Input.LABELS.gamepad.CycleWeapon else "-")
-		if entry[2] == "Primary" then
-			keyboard = "1 / 2"
+	for index, row in Controls.rows() do
+		local x = 40 + (index - 1) // 8 * 630
+		local y = 110 + (index - 1) % 8 * 66
+		local cells = {
+			{ text = row.label, offset = 0, width = 390, color = Theme.TEXT, font = Theme.FONT },
+			{ text = row.keyboard, offset = 395, width = 95, color = Theme.ACCENT, font = Theme.FONT_BOLD },
+			{ text = row.gamepad, offset = 495, width = 105, color = Theme.TEXT_DIM, font = Theme.FONT },
+		}
+		for _, cell in cells do
+			Theme.label(surface, {
+				Position = UDim2.fromOffset(x + cell.offset, y),
+				Size = UDim2.fromOffset(cell.width, 60),
+				TextSize = 28,
+				Font = cell.font,
+				TextColor3 = cell.color,
+				Text = cell.text,
+			})
 		end
-		Theme.label(surface, {
-			Position = UDim2.fromOffset(40 + column * 630, 110 + row * 66),
-			Size = UDim2.fromOffset(600, 60),
-			TextSize = 30,
-			RichText = true,
-			Text = `{entry[1]}  <font color="#FFB040"><b>{keyboard}</b></font>  <font color="#A096B6">{gamepad}</font>`,
-		})
 	end
 end
 for _, board in CollectionService:GetTagged("ControlsBoard") do
