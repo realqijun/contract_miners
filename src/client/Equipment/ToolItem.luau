@@ -18,6 +18,7 @@ local CameraController = require(Client.Character.CameraController)
 local Viewmodel = require(Client.Character.Viewmodel)
 local Effects = require(Client.Effects)
 local EquipmentHud = require(Client.UI.EquipmentHud)
+local Theme = require(Client.UI.Theme)
 local Loadout = require(script.Parent.Loadout)
 
 local player = Players.LocalPlayer
@@ -110,24 +111,38 @@ return function(toolId: string): Loadout.Item
 		return if type(value) == "number" then value else stats.charges
 	end
 
+	-- Tools with neither charges nor heat (the grapple) are limited only by their cooldown, so
+	-- their panel shows it recharging instead.
+	local function cooldownOnly(): boolean
+		return stats.charges == 0 and toolId ~= "PlasmaCutter"
+	end
+
 	local function refreshHud()
 		if not equipped then
 			return
 		end
 		local heat = player:GetAttribute("Heat_PlasmaCutter")
 		local note: string? = nil
+		local bar: number? = nil
+		local barColor = Color3.fromRGB(255, 120, 60)
 		if toolId == "SatchelCharge" and (player:GetAttribute("SatchelsPlaced") or 0) > 0 then
 			note = "FIRE AGAIN TO DETONATE"
-		elseif toolId == "PlasmaCutter" and type(heat) == "number" and heat >= 0.99 then
-			note = "OVERHEATED"
+		elseif toolId == "PlasmaCutter" then
+			bar = if type(heat) == "number" then heat else 0
+			note = if bar >= 0.99 then "OVERHEATED" else nil
+		elseif cooldownOnly() then
+			local elapsed = os.clock() - lastUse
+			bar = math.clamp(elapsed / stats.cooldown, 0, 1)
+			barColor = Theme.ACCENT
+			note = if bar >= 1 then "Ready" else `Ready in {math.ceil(stats.cooldown - elapsed)}s`
 		elseif charges() == 0 then
 			note = "EMPTY"
 		end
 		EquipmentHud.show({
 			name = stats.displayName,
 			primary = charges(),
-			bar = if toolId == "PlasmaCutter" then (if type(heat) == "number" then heat else 0) else nil,
-			barColor = Color3.fromRGB(255, 120, 60),
+			bar = bar,
+			barColor = barColor,
 			note = note,
 		})
 	end
@@ -225,10 +240,15 @@ return function(toolId: string): Loadout.Item
 		clearBeam()
 	end
 
+	local statusConnection: RBXScriptConnection? = nil
+
 	local item: Loadout.Item = {
 		equip = function()
 			equipped = true
 			stats = Stats.toolFor(player, toolId)
+			if cooldownOnly() then
+				statusConnection = RunService.Heartbeat:Connect(refreshHud)
+			end
 			local classId = player:GetAttribute("Class")
 			local accent = if Classes.isClassId(classId)
 				then Classes.INFO[classId :: Classes.ClassId].color
@@ -240,6 +260,10 @@ return function(toolId: string): Loadout.Item
 			equipped = false
 			triggerHeld = false
 			clearBeam()
+			if statusConnection then
+				statusConnection:Disconnect()
+				statusConnection = nil
+			end
 		end,
 		fire = function(down)
 			triggerHeld = down
