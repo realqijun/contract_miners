@@ -392,10 +392,12 @@ These Workspace attributes only work in Studio.
 | `DevSwarm` | Mission | Set to a size to call a swarm |
 | `DevGodMode` | Mission | The crew takes no damage |
 | `DevPumpSeconds` | Mission | Shortens Refinery pumping |
+| `DevConnectWells` | Mission | Runs every unconnected well straight to the Refinery |
 | `DevCredits` | Hub | Grants credits to every player |
 | `DevXp` | Hub | Grants XP to every player's selected class |
 
 The player attribute `DebugLookAt`, set to a world point, turns the mission camera to face it.
+The player attribute `DevTeleport`, set to a world point from the server, moves that player there without tripping the speed check.
 
 ## 20. Publishing
 

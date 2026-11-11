@@ -191,6 +191,21 @@ local function pause(pipeline: Pipeline)
 	pipeline.resume = holder
 end
 
+-- Runs the last span of a pipeline into the Refinery's inlet.
+local function connect(pipeline: Pipeline)
+	local current = refinery :: RefineryModels.Refinery
+	addSegment(pipeline, pipeline.nodes[#pipeline.nodes], current.inlet)
+	pipeline.connected = true
+	local layer = pipeline.layer
+	if layer then
+		layer:SetAttribute("LayingPipe", nil)
+	end
+	pipeline.layer = nil
+	clearResume(pipeline)
+	unmark(pipeline.model)
+	MissionState.set(KEYS.WellsConnected, (MissionState.get(KEYS.WellsConnected) or 0) + 1)
+end
+
 local function stepLaying(pipeline: Pipeline)
 	local layer = pipeline.layer :: Player
 	local root = layer.Character and layer.Character.PrimaryPart
@@ -202,12 +217,7 @@ local function stepLaying(pipeline: Pipeline)
 	local last = pipeline.nodes[#pipeline.nodes]
 	local current = refinery :: RefineryModels.Refinery
 	if (head - current.inlet).Magnitude <= CONNECT_DISTANCE then
-		addSegment(pipeline, last, current.inlet)
-		pipeline.connected = true
-		pipeline.layer = nil
-		layer:SetAttribute("LayingPipe", nil)
-		unmark(pipeline.model)
-		MissionState.set(KEYS.WellsConnected, (MissionState.get(KEYS.WellsConnected) or 0) + 1)
+		connect(pipeline)
 		return
 	end
 	if (head - last).Magnitude >= NODE_SPACING then
@@ -435,6 +445,19 @@ function RefineryMission.start()
 			end
 		end
 	end)
+	-- Studio-only test hook: setting DevConnectWells runs every unconnected well straight to the
+	-- Refinery, so automated playtests can reach pumping and the launch quickly.
+	if RunService:IsStudio() then
+		Workspace:GetAttributeChangedSignal("DevConnectWells"):Connect(function()
+			if Workspace:GetAttribute("DevConnectWells") and MissionState.get(KEYS.RefineryStage) == "Pipes" then
+				for _, pipeline in pipelines do
+					if not pipeline.connected then
+						connect(pipeline)
+					end
+				end
+			end
+		end)
+	end
 	MissionState.observe(KEYS.WellsConnected, function(connected)
 		updateScreen()
 		if connected == Missions.REFINERY_WELLS and MissionState.get(KEYS.RefineryStage) == "Pipes" then

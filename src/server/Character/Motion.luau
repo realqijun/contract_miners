@@ -78,6 +78,16 @@ local function sample(player: Player, now: number)
 		watched[player] = entry
 	end
 	local track = entry.track
+	-- Studio-only test hook: setting DevTeleport (a Vector3) on a player from the server moves
+	-- them there without tripping the speed check.
+	local teleport = player:GetAttribute("DevTeleport")
+	if RunService:IsStudio() and typeof(teleport) == "Vector3" then
+		player:SetAttribute("DevTeleport", nil)
+		character:PivotTo(CFrame.new(teleport) * root.CFrame.Rotation)
+		root.AssemblyLinearVelocity = Vector3.zero
+		watched[player] = nil
+		return
+	end
 	if not Vitals.isAlive(player) then
 		-- Downed characters are moved by nobody; start fresh once they are back up.
 		track.peakY = nil
