@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
+local CableReach = require(ReplicatedStorage.Shared.CableReach)
 local ToolsConfig = require(ReplicatedStorage.Shared.Config.Tools)
 local Input = require(script.Parent.Parent.Input)
 
@@ -53,15 +54,14 @@ local function dismount(root: BasePart, humanoid: Humanoid, along: Vector3)
 	end)
 end
 
+-- The cable within reach of the body, its ends, where along it the reach is closest, and its speed.
 local function nearestCable(position: Vector3): (Vector3?, Vector3?, number, number)
 	local bestA, bestB, bestT, bestDistance, bestSpeed = nil, nil, 0, GRAB_DISTANCE, 0
 	for _, cable in CollectionService:GetTagged("Cable") do
 		local a = cable:GetAttribute("A")
 		local b = cable:GetAttribute("B")
 		if typeof(a) == "Vector3" and typeof(b) == "Vector3" then
-			local ab = b - a
-			local t = math.clamp((position + Vector3.yAxis * HANG - a):Dot(ab) / ab:Dot(ab), 0, 1)
-			local distance = (a + ab * t - (position + Vector3.yAxis * HANG)).Magnitude
+			local distance, t = CableReach.measure(position, a, b)
 			if distance < bestDistance then
 				local speed = cable:GetAttribute("RideSpeed")
 				bestA, bestB, bestT, bestDistance = a, b, t, distance
@@ -89,6 +89,11 @@ local function ride()
 	local from, to = if towardsB then a else b, if towardsB then b else a
 	local length = (to - from).Magnitude
 	local travelled = if towardsB then t * length else (1 - t) * length
+	-- Over the first stretch the rider settles from wherever they caught the line (standing on
+	-- its top end, say) to hanging under it.
+	local grabbedAt = travelled
+	local caught = from + (to - from).Unit * travelled
+	local startHang = caught.Y - root.Position.Y
 	humanoid.PlatformStand = true
 	riding = RunService.Heartbeat:Connect(function(dt)
 		travelled += speed * dt
@@ -100,8 +105,10 @@ local function ride()
 			return
 		end
 		local remaining = length - travelled
+		local settle = math.clamp((travelled - grabbedAt) / END_STRETCH, 0, 1)
 		local climb = math.clamp(1 - remaining / END_STRETCH, 0, 1)
-		local hang = HANG + (-END_RISE - HANG) * climb
+		local hang = startHang + (HANG - startHang) * settle
+		hang += (-END_RISE - hang) * climb
 		local point = from + (to - from).Unit * travelled - Vector3.yAxis * hang
 		root.CFrame = CFrame.lookAlong(point, Vector3.new(to.X - from.X, 0, to.Z - from.Z))
 		root.AssemblyLinearVelocity = (to - from).Unit * speed

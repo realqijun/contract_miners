@@ -10,6 +10,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
 local Workspace = game:GetService("Workspace")
 
+local CableReach = require(ReplicatedStorage.Shared.CableReach)
 local PlayerConfig = require(ReplicatedStorage.Shared.Config.Player)
 local ToolsConfig = require(ReplicatedStorage.Shared.Config.Tools)
 local MotionRules = require(script.Parent.MotionRules)
@@ -31,15 +32,12 @@ type Watched = { character: Model, track: MotionRules.Track, warnedAt: number }
 local watched: { [Player]: Watched } = {}
 
 local function nearCable(position: Vector3): boolean
-	local hold = position + Vector3.yAxis * ToolsConfig.CABLE_HANG
 	for _, cable in CollectionService:GetTagged("Cable") do
 		local a = cable:GetAttribute("A")
 		local b = cable:GetAttribute("B")
 		if typeof(a) == "Vector3" and typeof(b) == "Vector3" then
-			local ab = b - a
-			local t = math.clamp((hold - a):Dot(ab) / ab:Dot(ab), 0, 1)
 			-- A little extra reach covers the delay before the server sees the rider move.
-			if (a + ab * t - hold).Magnitude <= ToolsConfig.CABLE_GRAB_DISTANCE + 1.5 then
+			if CableReach.measure(position, a, b) <= ToolsConfig.CABLE_GRAB_DISTANCE + 1.5 then
 				return true
 			end
 		end
