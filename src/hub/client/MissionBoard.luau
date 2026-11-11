@@ -20,7 +20,7 @@ local DESCRIPTIONS: { [Missions.MissionType]: string } = {
 }
 
 function MissionBoard.open(padIndex: number)
-	local content = Menu.open("Mission board", 760, 380)
+	local content = Menu.open("Mission board", 760, 352)
 	local state = ReplicatedStorage:WaitForChild("LaunchPads"):FindFirstChild(`Pad{padIndex}`)
 	local crew = Theme.label(content, {
 		Size = UDim2.new(1, 0, 0, 20),

@@ -6,6 +6,7 @@
 local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 local ServerScriptService = game:GetService("ServerScriptService")
 
 local Shared = ReplicatedStorage.Shared
@@ -16,7 +17,9 @@ local ProfileStore = require(ServerScriptService.Vendor.ProfileStore)
 
 local PlayerData = {}
 
-local STORE_NAME = "ContractMinersPlayers_v1"
+-- Studio playtests save to a store of their own, so test runs and the Studio test hooks never
+-- touch the progress players have in the live game.
+local STORE_NAME = if RunService:IsStudio() then "ContractMinersPlayers_v1_Studio" else "ContractMinersPlayers_v1"
 local SETTING_LIMITS: { [string]: { number } } = {
 	mouseSensitivity = { 0.1, 4 },
 	gamepadSensitivity = { 0.1, 4 },

@@ -414,6 +414,7 @@ The owner:
 2. Opens the mission place (`ContractMinersMission.rbxl`) with Rojo connected on port 34873 and chooses File, Publish to Roblox As, picks the Contract Miners experience and adds it as a new place named Mission.
 3. Copies both place ids from the Creator Dashboard (Places list) and sends them to the agent, which sets `HUB` and `MISSION` in `src/shared/Config/Places.luau` and republishes both places.
 4. In Game Settings, Security, turns on Enable Studio Access to API Services, so saves also work in Studio.
+   Studio saves go to a separate store (`ContractMinersPlayers_v1_Studio`), so playtests and the test hooks never change live progress.
 5. In Game Settings, Avatar, sets the avatar type to R15.
 6. Completes the Maturity and Compliance questionnaire in the Creator Dashboard, where cartoon violence against aliens should land at a low maturity rating.
 7. Clears the Studio test attributes (section 19.1) in both places before the final publish; they are ignored outside Studio but should not ship set.

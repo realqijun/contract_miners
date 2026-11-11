@@ -73,7 +73,7 @@ local function choiceCell(
 	})
 	Theme.label(cell, {
 		Position = UDim2.fromOffset(8, 20),
-		Size = UDim2.new(1, -16, 0, 30),
+		Size = UDim2.new(1, -16, 0, 40),
 		TextSize = 11,
 		TextWrapped = true,
 		TextYAlignment = Enum.TextYAlignment.Top,

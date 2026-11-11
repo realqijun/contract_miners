@@ -39,7 +39,7 @@ Upgrades.ITEMS = {
 			),
 			B = up(
 				"Pressure Drive",
-				"Much tighter spread, half the recoil, longer range, +10% damage",
+				"Tighter spread, half the recoil, longer range, +10% damage",
 				{ { "spread", "mul", 0.4 }, { "recoil", "mul", 0.5 }, { "range", "add", 40 }, { "damage", "mul", 1.1 } }
 			),
 		},
