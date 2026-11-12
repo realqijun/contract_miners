@@ -1,5 +1,6 @@
 --!strict
--- Bottom-right panel for whatever is in hand: name, magazine and reserve (or charges), heat bar.
+-- Bottom-right panel for whatever is in hand: name, magazine and reserve (or charges, or heat), and
+-- a heat or cooldown bar.
 -- Items push their status here whenever it changes.
 
 local Theme = require(script.Parent.Theme)
@@ -13,6 +14,10 @@ export type Status = {
 	primary: number?,
 	-- Small number after the slash (reserve); nil hides it.
 	secondary: number?,
+	-- Big text in place of `primary` for items limited by something other than ammo, such as heat,
+	-- and a small word after it.
+	readout: string?,
+	unit: string?,
 	-- 0..1 heat or cooldown bar; nil hides it.
 	bar: number?,
 	barColor: Color3?,
@@ -82,9 +87,15 @@ end
 function EquipmentHud.show(status: Status)
 	ensure()
 	nameLabel.Text = string.upper(status.name)
-	primaryLabel.Text = if status.primary then tostring(status.primary) else ""
-	primaryLabel.TextColor3 = if status.primary == 0 then Theme.WARNING else Theme.TEXT
-	secondaryLabel.Text = if status.secondary then "/ " .. tostring(status.secondary) else ""
+	if status.readout then
+		primaryLabel.Text = status.readout
+		primaryLabel.TextColor3 = Theme.TEXT
+		secondaryLabel.Text = status.unit or ""
+	else
+		primaryLabel.Text = if status.primary then tostring(status.primary) else ""
+		primaryLabel.TextColor3 = if status.primary == 0 then Theme.WARNING else Theme.TEXT
+		secondaryLabel.Text = if status.secondary then "/ " .. tostring(status.secondary) else ""
+	end
 	noteLabel.Text = status.note or ""
 	bar.frame.Visible = status.bar ~= nil
 	if status.bar then

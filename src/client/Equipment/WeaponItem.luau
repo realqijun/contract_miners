@@ -117,11 +117,15 @@ return function(weaponId: WeaponsConfig.WeaponId): Loadout.Item
 		elseif mag == 0 and reserve == 0 then
 			note = "NO AMMO"
 		end
+		-- The Rotary Cannon never runs dry; heat is what stops it, so that is its readout.
+		local spinning = stats.mode == "Spin"
 		EquipmentHud.show({
 			name = stats.displayName,
-			primary = mag,
-			secondary = if stats.mode == "Spin" then nil else reserve,
-			bar = if stats.mode == "Spin" then heat else nil,
+			primary = if spinning then nil else mag,
+			secondary = if spinning then nil else reserve,
+			readout = if spinning then `{math.floor(heat * 100 + 0.5)}%` else nil,
+			unit = if spinning then "heat" else nil,
+			bar = if spinning then heat else nil,
 			barColor = Color3.fromRGB(255, 120, 60),
 			note = note,
 		})
