@@ -199,6 +199,11 @@ local function stepRunners(player: Player, spots: WalkthroughCave.Spots): { [Wal
 			end)
 		end,
 		Swarm = function()
+			-- A grenade that wipes out the first group (the cluster bomb, the decoy beacon) would skip
+			-- this lesson, so a fresh group comes in to practise shooting on.
+			if Spawner.pending() == 0 and Hive.count() == 0 then
+				Spawner.group(WalkthroughConfig.SWARM)
+			end
 			return waitUntil(function()
 				return Spawner.pending() == 0 and Hive.count() == 0
 			end)

@@ -23,10 +23,16 @@ local Coach = {}
 local KEYS = MissionState.KEYS
 local player = Players.LocalPlayer
 
--- Words for the placeholders that are not Input actions.
+-- Words for the placeholders that are not Input actions, and for {Primary}, which means switching
+-- weapons: two keys on a keyboard, one cycling button on a gamepad.
 local EXTRA_LABELS = {
-	keyboard = { Look = "the mouse", Move = "WASD", Jump = "Space" },
-	gamepad = { Look = "the right stick", Move = "the left stick", Jump = "A" },
+	keyboard = { Look = "the mouse", Move = "WASD", Jump = "Space", Primary = "1 / 2" },
+	gamepad = {
+		Look = "the right stick",
+		Move = "the left stick",
+		Jump = "A",
+		Primary = Input.LABELS.gamepad.CycleWeapon,
+	},
 }
 
 -- Fills each {Placeholder} with the binding for the device in use, in bold accent.
@@ -35,9 +41,6 @@ local function format(template: string): string
 	return (
 		string.gsub(template, "{(%w+)}", function(name: string)
 			local label = (EXTRA_LABELS :: any)[device][name] or Input.LABELS[device][name :: any]
-			if not label and name == "Primary" and device == "gamepad" then
-				label = Input.LABELS.gamepad.CycleWeapon
-			end
 			return `<font color="#FFB040"><b>{label or name}</b></font>`
 		end)
 	)
