@@ -350,7 +350,8 @@ function Weapons.start()
 					local stats = WeaponsConfig.STATS[weaponId :: WeaponsConfig.WeaponId]
 					local before = math.floor(state.heat * 20)
 					state.heat = math.max(0, state.heat - (stats.coolPerSecond or 0.5) * dt)
-					if math.floor(state.heat * 20) ~= before then
+					-- Publish every 5% step, and the final step to cold, which would otherwise round to 5%.
+					if math.floor(state.heat * 20) ~= before or state.heat == 0 then
 						publish(player, weaponId, state)
 					end
 				end
