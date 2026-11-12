@@ -132,7 +132,8 @@ function Resupply.call(position: Vector3): boolean
 		Explosions.detonate({ position = floor + Vector3.yAxis, radius = 6, damage = 400, style = "Blast" })
 		setupPrompts(model, body)
 		model:SetAttribute("MarkerLabel", "Resupply")
-		model:SetAttribute("MarkerColor", Color3.fromRGB(120, 255, 170))
+		-- Cream, well apart from the Lift Pod's green, the Dropcan's orange and the class colours.
+		model:SetAttribute("MarkerColor", Color3.fromRGB(245, 236, 210))
 		CollectionService:AddTag(model, "Marker")
 	end)
 	return true
